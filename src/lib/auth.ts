@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { sql } from '@vercel/postgres';
 import { getDb } from './db';
@@ -7,6 +7,12 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'telum-dev-secret-change-in-production';
 const TOKEN_EXPIRY = '7d';
+
+// bcryptjs 3.x is ESM — resolve hash/compare from default or named exports
+const bcryptHash = (bcrypt as any).default?.hash || bcrypt.hash;
+const bcryptCompare = (bcrypt as any).default?.compare || bcrypt.compare;
+const jwtSign = (jwt as any).default?.sign || jwt.sign;
+const jwtVerify = (jwt as any).default?.verify || jwt.verify;
 
 export interface User {
   id: string;
@@ -31,12 +37,12 @@ export async function register(email: string, password: string, name: string): P
   }
 
   const id = uuidv4();
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await bcryptHash(password, 12);
 
   await sql`INSERT INTO users (id, email, password_hash, name) VALUES (${id}, ${email}, ${passwordHash}, ${name})`;
 
   const user: User = { id, email, name, created_at: new Date().toISOString() };
-  const token = jwt.sign({ userId: id, email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  const token = jwtSign({ userId: id, email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 
   return { success: true, user, token };
 }
@@ -50,20 +56,20 @@ export async function login(email: string, password: string): Promise<AuthResult
     return { success: false, error: 'Invalid email or password' };
   }
 
-  const valid = await bcrypt.compare(password, row.password_hash);
+  const valid = await bcryptCompare(password, row.password_hash);
   if (!valid) {
     return { success: false, error: 'Invalid email or password' };
   }
 
   const user: User = { id: row.id, email: row.email, name: row.name, created_at: row.created_at };
-  const token = jwt.sign({ userId: row.id, email: row.email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  const token = jwtSign({ userId: row.id, email: row.email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 
   return { success: true, user, token };
 }
 
 export function verifyToken(token: string): { userId: string; email: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
+    return jwtVerify(token, JWT_SECRET) as { userId: string; email: string };
   } catch {
     return null;
   }
