@@ -76,9 +76,20 @@ export async function getCurrentUser(): Promise<User | null> {
     const payload = verifyToken(token);
     if (!payload) return null;
 
+    // Try DB lookup first
     const db = getDb();
     const row = db.prepare('SELECT id, email, name, created_at FROM users WHERE id = ?').get(payload.userId) as any;
-    return row || null;
+    if (row) return row;
+
+    // On serverless cold start the in-memory DB is empty, but the JWT
+    // signature already proves the user's identity. Construct a User
+    // from the verified token payload so authenticated routes still work.
+    return {
+      id: payload.userId,
+      email: payload.email,
+      name: payload.email.split('@')[0],
+      created_at: new Date().toISOString(),
+    };
   } catch {
     return null;
   }
