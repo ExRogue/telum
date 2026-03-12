@@ -77,6 +77,17 @@ export async function initDb() {
     )
   `;
 
+  // One-time cleanup: remove duplicate news articles (keep oldest by id per source_url)
+  await sql`
+    DELETE FROM news_articles
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM news_articles
+      WHERE source_url IS NOT NULL AND source_url != '' AND source_url != '#'
+      GROUP BY source_url
+    )
+    AND source_url IS NOT NULL AND source_url != '' AND source_url != '#'
+  `;
+
   // Seed demo articles
   await seedDemoArticles();
 }
