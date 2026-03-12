@@ -1,0 +1,379 @@
+'use client';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Newspaper,
+  Search,
+  Filter,
+  RefreshCw,
+  Clock,
+  ExternalLink,
+  Tag,
+  Globe,
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+
+interface NewsArticle {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  source: string;
+  source_url: string;
+  category: string;
+  tags: string;
+  published_at: string;
+}
+
+const CATEGORY_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'cyber', label: 'Cyber' },
+  { id: 'reinsurance', label: 'Reinsurance' },
+  { id: 'ils', label: 'ILS' },
+  { id: 'uk_market', label: 'UK Market' },
+  { id: 'specialty', label: 'Specialty' },
+  { id: 'commercial', label: 'Commercial' },
+  { id: 'general', label: 'General' },
+];
+
+const SOURCE_COLORS: Record<string, string> = {
+  'Insurance Journal': 'text-blue-400',
+  'Reinsurance News': 'text-teal-400',
+  'Artemis': 'text-purple-400',
+  'Insurance Times': 'text-amber-400',
+  'The Insurer': 'text-emerald-400',
+  'Commercial Risk': 'text-rose-400',
+};
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatFullDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export default function NewsPage() {
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [refreshResult, setRefreshResult] = useState<{ fetched: number; errors: string[] } | null>(null);
+
+  const fetchArticles = useCallback(async () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (activeCategory !== 'all' && !searchQuery) params.set('category', activeCategory);
+    params.set('limit', '50');
+
+    const res = await fetch(`/api/news?${params.toString()}`);
+    const data = await res.json();
+    setArticles(data.articles || []);
+  }, [searchQuery, activeCategory]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchArticles().finally(() => setLoading(false));
+  }, [fetchArticles]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      const res = await fetch('/api/news', { method: 'POST' });
+      const data = await res.json();
+      setRefreshResult(data);
+      // Re-fetch the articles list
+      await fetchArticles();
+    } catch {
+      setRefreshResult({ fetched: 0, errors: ['Network error – could not reach server.'] });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Apply client-side category filter when browsing (not searching)
+  const displayed = searchQuery
+    ? articles
+    : activeCategory === 'all'
+      ? articles
+      : articles.filter((a) => a.category === activeCategory);
+
+  // Group by source for source stats
+  const sourceCounts: Record<string, number> = {};
+  articles.forEach((a) => {
+    sourceCounts[a.source] = (sourceCounts[a.source] || 0) + 1;
+  });
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">News Feed</h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            Insurance industry news from leading trade press
+          </p>
+        </div>
+        <Button onClick={handleRefresh} loading={refreshing} variant="secondary">
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh Feeds
+        </Button>
+      </div>
+
+      {/* Refresh result toast */}
+      {refreshResult && (
+        <div
+          className={`flex items-start gap-3 p-4 rounded-xl border ${
+            refreshResult.errors.length > 0
+              ? 'bg-amber-500/10 border-amber-500/20'
+              : 'bg-emerald-500/10 border-emerald-500/20'
+          }`}
+        >
+          {refreshResult.errors.length > 0 ? (
+            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              {refreshResult.fetched > 0
+                ? `Fetched ${refreshResult.fetched} new article${refreshResult.fetched !== 1 ? 's' : ''}`
+                : 'No new articles found'}
+            </p>
+            {refreshResult.errors.length > 0 && (
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                {refreshResult.errors.length} feed{refreshResult.errors.length !== 1 ? 's' : ''} had errors
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => setRefreshResult(null)}
+            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Source stats */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Globe className="w-4 h-4 text-[var(--text-secondary)]" />
+        {Object.entries(sourceCounts).map(([source, count]) => (
+          <span key={source} className="flex items-center gap-1.5 text-xs">
+            <span className={`font-medium ${SOURCE_COLORS[source] || 'text-[var(--text-secondary)]'}`}>
+              {source}
+            </span>
+            <span className="text-[var(--text-secondary)]">({count})</span>
+          </span>
+        ))}
+        {Object.keys(sourceCounts).length === 0 && !loading && (
+          <span className="text-xs text-[var(--text-secondary)]">No sources loaded yet</span>
+        )}
+      </div>
+
+      {/* Filters + Search */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        {/* Search */}
+        <div className="relative flex-1 w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+          <input
+            type="text"
+            placeholder="Search articles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[var(--navy-light)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+          />
+        </div>
+
+        {/* Category filters */}
+        <div className="flex items-center gap-1 flex-wrap">
+          <Filter className="w-4 h-4 text-[var(--text-secondary)] mr-1" />
+          {CATEGORY_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setActiveCategory(f.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                activeCategory === f.id
+                  ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--navy-lighter)]'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Articles list */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full" />
+        </div>
+      ) : displayed.length === 0 ? (
+        <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-12 text-center">
+          <Newspaper className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4 opacity-40" />
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">No articles found</h3>
+          <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto">
+            {articles.length === 0
+              ? 'Click "Refresh Feeds" to fetch the latest insurance industry news from trade press.'
+              : 'No articles match your search or filter. Try adjusting your criteria.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayed.map((article) => {
+            const tags: string[] = (() => {
+              try {
+                return JSON.parse(article.tags || '[]');
+              } catch {
+                return [];
+              }
+            })();
+            const isExpanded = expandedId === article.id;
+
+            return (
+              <div
+                key={article.id}
+                className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)]/20 transition-all"
+              >
+                {/* Article header row */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : article.id)}
+                  className="w-full text-left p-5"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Source icon */}
+                    <div className="w-10 h-10 rounded-lg bg-[var(--navy-lighter)] flex items-center justify-center flex-shrink-0">
+                      <Newspaper className={`w-5 h-5 ${SOURCE_COLORS[article.source] || 'text-[var(--text-secondary)]'}`} />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-[var(--text-primary)] leading-snug mb-1.5">
+                        {article.title}
+                      </h3>
+                      <p className={`text-xs text-[var(--text-secondary)] leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                        {article.summary}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                        <span className={`text-xs font-medium ${SOURCE_COLORS[article.source] || 'text-[var(--text-secondary)]'}`}>
+                          {article.source}
+                        </span>
+                        <span className="text-[var(--text-secondary)] text-xs">·</span>
+                        <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(article.published_at)}
+                        </span>
+                        {tags.slice(0, 4).map((tag) => (
+                          <Badge key={tag}>{tag}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Expand chevron */}
+                    <div className="flex-shrink-0 pt-1">
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-[var(--text-secondary)]" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-[var(--text-secondary)]" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Expanded detail */}
+                {isExpanded && (
+                  <div className="px-5 pb-5 border-t border-[var(--border)] pt-4 ml-14">
+                    <div className="space-y-4">
+                      {/* Full summary */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                          Summary
+                        </h4>
+                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                          {article.summary || article.content}
+                        </p>
+                      </div>
+
+                      {/* Meta row */}
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatFullDate(article.published_at)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-3.5 h-3.5" />
+                            {article.category}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {article.source_url && article.source_url !== '#' && (
+                            <a
+                              href={article.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Read original
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      {tags.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Tag className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                          {tags.map((tag) => (
+                            <Badge key={tag} variant="purple">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Article count footer */}
+      {!loading && displayed.length > 0 && (
+        <div className="text-center text-xs text-[var(--text-secondary)] py-2">
+          Showing {displayed.length} article{displayed.length !== 1 ? 's' : ''}
+          {activeCategory !== 'all' && !searchQuery && ` in ${CATEGORY_FILTERS.find(f => f.id === activeCategory)?.label}`}
+          {searchQuery && ` matching "${searchQuery}"`}
+        </div>
+      )}
+    </div>
+  );
+}
