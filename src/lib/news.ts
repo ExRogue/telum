@@ -46,13 +46,22 @@ export async function fetchNewsFeeds(): Promise<{ fetched: number; errors: strin
       for (const item of items) {
         const id = uuidv4();
         const tags = extractTags(item.title || '', item.contentSnippet || '');
+        const sourceUrl = item.link || '';
 
-        await sql`
-          INSERT INTO news_articles (id, title, summary, content, source, source_url, category, tags, published_at)
-          VALUES (${id}, ${item.title || 'Untitled'}, ${(item.contentSnippet || '').substring(0, 500)}, ${item.content || item.contentSnippet || ''}, ${feed.source}, ${item.link || ''}, ${feed.category}, ${JSON.stringify(tags)}, ${item.isoDate || new Date().toISOString()})
-          ON CONFLICT (id) DO NOTHING
-        `;
-        totalFetched++;
+        // Skip items with no URL — can't dedup without one
+        if (!sourceUrl) continue;
+
+        try {
+          await sql`
+            INSERT INTO news_articles (id, title, summary, content, source, source_url, category, tags, published_at)
+            VALUES (${id}, ${item.title || 'Untitled'}, ${(item.contentSnippet || '').substring(0, 500)}, ${item.content || item.contentSnippet || ''}, ${feed.source}, ${sourceUrl}, ${feed.category}, ${JSON.stringify(tags)}, ${item.isoDate || new Date().toISOString()})
+            ON CONFLICT (source_url) WHERE source_url IS NOT NULL AND source_url != '' AND source_url != '#'
+            DO NOTHING
+          `;
+          totalFetched++;
+        } catch (insertErr) {
+          // Duplicate — skip silently
+        }
       }
     } catch (err) {
       errors.push(`${feed.source}: ${(err as Error).message}`);

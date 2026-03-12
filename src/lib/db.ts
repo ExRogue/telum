@@ -44,6 +44,13 @@ export async function initDb() {
     )
   `;
 
+  // Add unique constraint on source_url for deduplication (idempotent)
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_news_articles_source_url
+    ON news_articles (source_url)
+    WHERE source_url IS NOT NULL AND source_url != '' AND source_url != '#'
+  `;
+
   await sql`
     CREATE TABLE IF NOT EXISTS generated_content (
       id TEXT PRIMARY KEY,
