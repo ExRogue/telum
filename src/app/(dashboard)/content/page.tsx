@@ -450,6 +450,8 @@ export default function ContentPage() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
+                totalItems={sorted.length}
+                itemsPerPage={ITEMS_PER_PAGE}
                 onPageChange={setCurrentPage}
               />
             </div>
