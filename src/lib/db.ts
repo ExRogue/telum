@@ -14,6 +14,16 @@ export async function initDb() {
     )
   `;
 
+  // Migration: add role column if table existed before role was introduced
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'user'
+  `;
+
+  // Migration: add updated_at if missing
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()
+  `;
+
   await sql`
     CREATE TABLE IF NOT EXISTS companies (
       id TEXT PRIMARY KEY,
