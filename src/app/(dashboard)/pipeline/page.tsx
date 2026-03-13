@@ -103,7 +103,7 @@ export default function PipelinePage() {
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 403) {
-          setError('You've reached your article viewing limit. Upgrade your plan to continue browsing news.');
+          setError("You've reached your article viewing limit. Upgrade your plan to continue browsing news.");
         } else {
           setError(data.error || 'Failed to load news articles');
         }
@@ -168,7 +168,7 @@ export default function PipelinePage() {
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 403) {
-          setError(data.error || 'You've reached your content generation limit. Upgrade your plan to generate more content.');
+          setError(data.error || "You've reached your content generation limit. Upgrade your plan to generate more content.");
         } else {
           setError(data.error || 'Generation failed');
         }
