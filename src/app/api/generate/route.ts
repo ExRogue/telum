@@ -8,7 +8,7 @@ import { sql } from '@vercel/postgres';
 import { getDb } from '@/lib/db';
 import { sanitizeString, rateLimit } from '@/lib/validation';
 
-const VALID_CONTENT_TYPES = ['newsletter', 'linkedin', 'podcast_script', 'executive_briefing'];
+const VALID_CONTENT_TYPES = ['newsletter', 'linkedin', 'podcast', 'briefing'];
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
