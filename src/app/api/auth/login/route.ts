@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: 'Login failed. Please try again.' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Login error:', error?.message || error, error?.stack);
+    return NextResponse.json({ error: 'Login failed. Please try again.', detail: error?.message || String(error) }, { status: 500 });
   }
 }
