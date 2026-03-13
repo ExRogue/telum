@@ -15,17 +15,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await getDb();
+
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50'), 1), 100);
+    const offset = (page - 1) * limit;
+
+    const countResult = await sql`SELECT COUNT(*) as total FROM users`;
+    const total = parseInt(countResult.rows[0].total);
+
     const result = await sql`
       SELECT id, email, name, role, created_at
       FROM users
       ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `;
-    return NextResponse.json(result.rows);
+
+    return NextResponse.json({
+      users: result.rows,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+    });
   } catch (error) {
     console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }

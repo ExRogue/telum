@@ -1,0 +1,88 @@
+/**
+ * Input validation utilities for Telum API routes
+ */
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isValidEmail(email: string): boolean {
+  if (!email || typeof email !== 'string') return false;
+  if (email.length > 254) return false;
+  return EMAIL_REGEX.test(email.trim());
+}
+
+export interface PasswordValidation {
+  valid: boolean;
+  message?: string;
+}
+
+export function validatePassword(password: string): PasswordValidation {
+  if (!password || typeof password !== 'string') {
+    return { valid: false, message: 'Password is required' };
+  }
+  if (password.length < 8) {
+    return { valid: false, message: 'Password must be at least 8 characters' };
+  }
+  if (password.length > 128) {
+    return { valid: false, message: 'Password must be fewer than 128 characters' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: 'Password must contain at least one uppercase letter' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: 'Password must contain at least one lowercase letter' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: 'Password must contain at least one number' };
+  }
+  return { valid: true };
+}
+
+export function sanitizeString(input: string, maxLength: number = 500): string {
+  if (!input || typeof input !== 'string') return '';
+  return input.trim().slice(0, maxLength);
+}
+
+export function sanitizeName(name: string): string {
+  return sanitizeString(name, 100);
+}
+
+/**
+ * Simple in-memory rate limiter.
+ * In production with multiple serverless instances this is per-instance,
+ * but it still provides meaningful protection against abuse from a single
+ * client hitting the same instance repeatedly.
+ */
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+export function rateLimit(
+  key: string,
+  maxRequests: number = 10,
+  windowMs: number = 60_000
+): { allowed: boolean; retryAfterMs?: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true };
+  }
+
+  if (entry.count >= maxRequests) {
+    return { allowed: false, retryAfterMs: entry.resetAt - now };
+  }
+
+  entry.count++;
+  return { allowed: true };
+}
+
+// Periodic cleanup to prevent unbounded memory growth
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitMap) {
+      if (now > entry.resetAt) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }, 300_000); // every 5 minutes
+}
