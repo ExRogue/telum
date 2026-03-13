@@ -51,7 +51,7 @@ export default function AdminPage() {
         }
 
         const authData = await authResponse.json();
-        if (authData.role !== 'admin') {
+        if (authData.user?.role !== 'admin') {
           setIsAdmin(false);
           setLoading(false);
           return;
@@ -84,7 +84,7 @@ export default function AdminPage() {
           const usersResponse = await fetch('/api/admin/users');
           if (!usersResponse.ok) throw new Error('Failed to fetch users');
           const usersData = await usersResponse.json();
-          setUsers(usersData);
+          setUsers(usersData.users || []);
         } catch (err) {
           setError(prev => prev || (err instanceof Error ? err.message : 'Failed to load users'));
         }
