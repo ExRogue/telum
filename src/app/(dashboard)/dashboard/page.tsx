@@ -204,7 +204,7 @@ export default function DashboardPage() {
   // Content type breakdown
   const typeCounts: Record<string, number> = {};
   content.forEach(c => { typeCounts[c.content_type] = (typeCounts[c.content_type] || 0) + 1; });
-  const typeColors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'];
+  const typeColors = ['#14B8A6', '#5EEAD4', '#10B981', '#64748B', '#0D9488'];
   const typeSegments = Object.entries(typeCounts).map(([label, value], i) => ({
     label: label.charAt(0).toUpperCase() + label.slice(1),
     value,

@@ -54,7 +54,7 @@ const SORT_OPTIONS = [
 const SOURCE_COLORS: Record<string, string> = {
   'Insurance Journal': 'text-blue-400',
   'Reinsurance News': 'text-teal-400',
-  'Artemis': 'text-purple-400',
+  'Artemis': 'text-cyan-400',
   'Insurance Times': 'text-amber-400',
   'The Insurer': 'text-emerald-400',
   'Commercial Risk': 'text-rose-400',

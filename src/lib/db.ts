@@ -31,8 +31,8 @@ export async function initDb() {
       brand_tone TEXT DEFAULT '',
       compliance_frameworks TEXT DEFAULT '',
       logo_url TEXT DEFAULT '',
-      primary_color TEXT DEFAULT '#3B82F6',
-      secondary_color TEXT DEFAULT '#8B5CF6',
+      primary_color TEXT DEFAULT '#14B8A6',
+      secondary_color TEXT DEFAULT '#5EEAD4',
       accent_color TEXT DEFAULT '#10B981',
       custom_css TEXT DEFAULT '',
       created_at TIMESTAMP DEFAULT NOW(),
@@ -208,10 +208,10 @@ export async function getDb() {
     ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT ''
   `;
   await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#3B82F6'
+    ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#14B8A6'
   `;
   await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS secondary_color TEXT DEFAULT '#8B5CF6'
+    ALTER TABLE companies ADD COLUMN IF NOT EXISTS secondary_color TEXT DEFAULT '#5EEAD4'
   `;
   await sql`
     ALTER TABLE companies ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#10B981'

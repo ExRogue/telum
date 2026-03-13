@@ -90,8 +90,8 @@ export default function SettingsPage() {
 
   // Branding fields
   const [logoUrl, setLogoUrl] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#3B82F6');
-  const [secondaryColor, setSecondaryColor] = useState('#8B5CF6');
+  const [primaryColor, setPrimaryColor] = useState('#14B8A6');
+  const [secondaryColor, setSecondaryColor] = useState('#5EEAD4');
   const [accentColor, setAccentColor] = useState('#10B981');
   const [customCss, setCustomCss] = useState('');
   const [brandingLoaded, setBrandingLoaded] = useState(false);
@@ -108,8 +108,8 @@ export default function SettingsPage() {
     brandTone: '',
     complianceFrameworks: ['FCA'],
     logoUrl: '',
-    primaryColor: '#3B82F6',
-    secondaryColor: '#8B5CF6',
+    primaryColor: '#14B8A6',
+    secondaryColor: '#5EEAD4',
     accentColor: '#10B981',
     customCss: '',
   });
@@ -204,8 +204,8 @@ export default function SettingsPage() {
               }
             })(),
             logoUrl: b.logo_url || '',
-            primaryColor: b.primary_color || '#3B82F6',
-            secondaryColor: b.secondary_color || '#8B5CF6',
+            primaryColor: b.primary_color || '#14B8A6',
+            secondaryColor: b.secondary_color || '#5EEAD4',
             accentColor: b.accent_color || '#10B981',
             customCss: b.custom_css || '',
           };
@@ -707,7 +707,7 @@ export default function SettingsPage() {
                   type="text"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  placeholder="#3B82F6"
+                  placeholder="#14B8A6"
                   className="flex-1 bg-[var(--navy)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
@@ -727,7 +727,7 @@ export default function SettingsPage() {
                   type="text"
                   value={secondaryColor}
                   onChange={(e) => setSecondaryColor(e.target.value)}
-                  placeholder="#8B5CF6"
+                  placeholder="#5EEAD4"
                   className="flex-1 bg-[var(--navy)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>

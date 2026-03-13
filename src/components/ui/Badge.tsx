@@ -17,7 +17,7 @@ export default function Badge({ children, variant = 'default', size = 'sm', clas
           'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': variant === 'success',
           'bg-amber-500/10 text-amber-400 border border-amber-500/20': variant === 'warning',
           'bg-red-500/10 text-red-400 border border-red-500/20': variant === 'error',
-          'bg-purple-500/10 text-purple-400 border border-purple-500/20': variant === 'purple',
+          'bg-teal-500/10 text-teal-400 border border-teal-500/20': variant === 'purple',
         },
         {
           'text-[10px] px-2 py-0.5': size === 'sm',

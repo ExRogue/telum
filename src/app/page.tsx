@@ -27,7 +27,7 @@ const FEATURES = [
     icon: Zap,
     title: 'AI Content Generation',
     desc: 'One click transforms raw articles into polished newsletters, LinkedIn posts, podcast scripts, and client briefings in your brand voice.',
-    color: 'var(--purple)',
+    color: '#5EEAD4',
   },
   {
     icon: ShieldCheck,
@@ -39,15 +39,15 @@ const FEATURES = [
     icon: FileText,
     title: 'Multi-Format Output',
     desc: 'Publish across every channel your clients use — from formal briefings to conversational social posts, all from the same source material.',
-    color: 'var(--warning)',
+    color: 'var(--secondary)',
   },
 ];
 
 const CONTENT_TYPES = [
   { icon: Mail, label: 'Newsletters', color: 'var(--accent)' },
   { icon: Linkedin, label: 'LinkedIn Posts', color: '#0A66C2' },
-  { icon: Mic, label: 'Podcast Scripts', color: 'var(--warning)' },
-  { icon: Users, label: 'Client Briefings', color: 'var(--success)' },
+  { icon: Mic, label: 'Podcast Scripts', color: '#5EEAD4' },
+  { icon: Users, label: 'Client Briefings', color: 'var(--secondary)' },
 ];
 
 const LOGOS = [
@@ -95,7 +95,7 @@ export default function LandingPage() {
       <nav className="border-b border-[var(--border)] bg-[var(--navy)]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--purple)] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-[var(--accent)] flex items-center justify-center">
               <Zap className="w-4.5 h-4.5 text-white" size={18} />
             </div>
             <span className="text-lg font-bold text-[var(--text-primary)]">Telum</span>
@@ -120,8 +120,8 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[var(--accent)] rounded-full blur-[200px] opacity-[0.07]" />
-          <div className="absolute top-[-100px] right-[-200px] w-[600px] h-[600px] bg-[var(--purple)] rounded-full blur-[200px] opacity-[0.05]" />
+          <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[var(--accent)] rounded-full blur-[200px] opacity-[0.06]" />
+          <div className="absolute top-[-100px] right-[-200px] w-[600px] h-[600px] bg-[var(--accent)] rounded-full blur-[250px] opacity-[0.04]" />
         </div>
 
         <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center relative z-10">
@@ -134,7 +134,7 @@ export default function LandingPage() {
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-tight max-w-4xl mx-auto mb-6">
             Turn insurance news into{' '}
-            <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--purple)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[var(--accent)] to-emerald-400 bg-clip-text text-transparent">
               client-ready content
             </span>
           </h1>
@@ -250,7 +250,7 @@ export default function LandingPage() {
                 step: '02',
                 title: 'Choose Formats',
                 desc: 'Select which content types to generate — newsletters, LinkedIn posts, podcast scripts, or client briefings.',
-                accent: 'var(--purple)',
+                accent: '#5EEAD4',
               },
               {
                 step: '03',
@@ -364,7 +364,7 @@ export default function LandingPage() {
                   'Priority support',
                   'Analytics dashboard',
                 ],
-                accent: 'var(--purple)',
+                accent: 'var(--accent)',
                 popular: true,
               },
               {
@@ -391,13 +391,13 @@ export default function LandingPage() {
                 key={plan.name}
                 className={`relative bg-[var(--navy-light)] border rounded-xl p-8 flex flex-col ${
                   plan.popular
-                    ? 'border-[var(--purple)] ring-1 ring-[var(--purple)]/30'
+                    ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30'
                     : 'border-[var(--border)]'
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-[var(--purple)] text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    <span className="bg-[var(--accent)] text-white text-xs font-semibold px-3 py-1 rounded-full">
                       Most popular
                     </span>
                   </div>
@@ -433,7 +433,7 @@ export default function LandingPage() {
                   href="/register"
                   className={`text-center font-medium px-6 py-3 rounded-lg transition-colors text-sm ${
                     plan.popular
-                      ? 'bg-[var(--purple)] hover:opacity-90 text-white'
+                      ? 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white'
                       : 'bg-[var(--navy-lighter)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--navy-light)]'
                   }`}
                 >
@@ -492,7 +492,7 @@ export default function LandingPage() {
       <footer className="border-t border-[var(--border)] py-12">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--purple)] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
               <Zap size={14} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-[var(--text-primary)]">Telum</span>

@@ -48,7 +48,7 @@ export default function AnalyticsDashboard() {
             <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
               <span className="text-xs font-medium text-[var(--foreground)]">{item.cumulative || 0}</span>
               <div
-                className="w-full bg-blue-500 rounded-t-lg transition-all"
+                className="w-full bg-teal-500 rounded-t-lg transition-all"
                 style={{
                   height: `${((item.cumulative || 0) / maxValue) * 160}px`,
                 }}
@@ -90,7 +90,7 @@ export default function AnalyticsDashboard() {
                 {analyticsData.data.map((item: any, idx: number) => (
                   <div
                     key={idx}
-                    className="flex-1 bg-purple-500 rounded-t-sm transition-all"
+                    className="flex-1 bg-cyan-600 rounded-t-sm transition-all"
                     style={{
                       height: `${Math.max(((item[type] || 0) / maxValue) * 80, (item[type] || 0) > 0 ? 4 : 0)}px`,
                       opacity: (item[type] || 0) > 0 ? 1 : 0.15,
@@ -155,7 +155,7 @@ export default function AnalyticsDashboard() {
                 {analyticsData.data.map((item: any, idx: number) => (
                   <div
                     key={idx}
-                    className="flex-1 bg-amber-500 rounded-t-sm transition-all"
+                    className="flex-1 bg-slate-400 rounded-t-sm transition-all"
                     style={{
                       height: `${Math.max(((item[type] || 0) / maxValue) * 80, (item[type] || 0) > 0 ? 4 : 0)}px`,
                       opacity: (item[type] || 0) > 0 ? 1 : 0.15,
@@ -184,7 +184,7 @@ export default function AnalyticsDashboard() {
               <span className="text-sm font-medium w-36 text-[var(--foreground)]">{item.plan_name}</span>
               <div className="flex-1 bg-[var(--border)] rounded-full h-6 overflow-hidden">
                 <div
-                  className="bg-indigo-500 h-full transition-all flex items-center justify-end pr-2 min-w-[3rem]"
+                  className="bg-teal-500 h-full transition-all flex items-center justify-end pr-2 min-w-[3rem]"
                   style={{ width: `${percentage}%` }}
                 >
                   <span className="text-xs font-bold text-white">
@@ -200,19 +200,18 @@ export default function AnalyticsDashboard() {
   };
 
   const tabs = [
-    { key: 'user-growth', label: 'User Growth', icon: Users, color: 'blue' },
-    { key: 'content-generated', label: 'Content Generated', icon: Activity, color: 'purple' },
+    { key: 'user-growth', label: 'User Growth', icon: Users, color: 'teal' },
+    { key: 'content-generated', label: 'Content Generated', icon: Activity, color: 'cyan' },
     { key: 'popular-content-types', label: 'Popular Types', icon: TrendingUp, color: 'emerald' },
-    { key: 'api-usage', label: 'API Usage', icon: BarChart3, color: 'amber' },
-    { key: 'subscription-breakdown', label: 'Plans', icon: BarChart3, color: 'indigo' },
+    { key: 'api-usage', label: 'API Usage', icon: BarChart3, color: 'slate' },
+    { key: 'subscription-breakdown', label: 'Plans', icon: BarChart3, color: 'teal' },
   ];
 
   const activeColors: Record<string, string> = {
-    blue: 'bg-blue-500 text-white',
-    purple: 'bg-purple-500 text-white',
+    teal: 'bg-teal-500 text-white',
+    cyan: 'bg-cyan-600 text-white',
     emerald: 'bg-emerald-500 text-white',
-    amber: 'bg-amber-500 text-white',
-    indigo: 'bg-indigo-500 text-white',
+    slate: 'bg-slate-500 text-white',
   };
 
   return (
