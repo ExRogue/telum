@@ -236,8 +236,7 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--navy)] p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
@@ -250,7 +249,7 @@ export default function BillingPage() {
 
         {/* Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-[var(--error)] rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-500/10 border border-[var(--error)] rounded-lg flex items-start gap-3">
             <AlertCircle className="text-[var(--error)] flex-shrink-0 mt-0.5" size={20} />
             <div>
               <h3 className="font-semibold text-[var(--error)]">Error</h3>
@@ -260,7 +259,7 @@ export default function BillingPage() {
         )}
 
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-[var(--success)] rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-[var(--success)] rounded-lg flex items-start gap-3">
             <CheckCircle2 className="text-[var(--success)] flex-shrink-0 mt-0.5" size={20} />
             <div>
               <h3 className="font-semibold text-[var(--success)]">Success</h3>
@@ -513,7 +512,7 @@ export default function BillingPage() {
             If you need help choosing a plan or have questions about billing, please contact our support team.
           </p>
           <a
-            href="mailto:support@telum.com"
+            href="mailto:support@telum.io"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium transition-colors"
           >
             <CreditCard size={18} />
@@ -521,6 +520,5 @@ export default function BillingPage() {
           </a>
         </div>
       </div>
-    </div>
   );
 }
