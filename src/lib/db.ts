@@ -260,6 +260,30 @@ export async function initDb() {
   `;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS messaging_bibles (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      status TEXT DEFAULT 'draft',
+      company_description TEXT DEFAULT '',
+      target_audiences TEXT DEFAULT '[]',
+      competitors TEXT DEFAULT '[]',
+      differentiators TEXT DEFAULT '[]',
+      key_challenges TEXT DEFAULT '[]',
+      departments TEXT DEFAULT '[]',
+      channels TEXT DEFAULT '["linkedin","email","trade_media"]',
+      brand_voice_guide TEXT DEFAULT '',
+      messaging_pillars TEXT DEFAULT '[]',
+      icp_profiles TEXT DEFAULT '[]',
+      department_messaging TEXT DEFAULT '[]',
+      elevator_pitch TEXT DEFAULT '',
+      tagline TEXT DEFAULT '',
+      full_document TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS user_article_actions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,

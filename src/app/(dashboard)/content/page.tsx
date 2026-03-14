@@ -22,6 +22,7 @@ import {
   Trash2,
   Download as DownloadIcon,
   Check,
+  Megaphone,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -45,6 +46,7 @@ const TYPE_META: Record<string, { label: string; icon: typeof Mail; color: strin
   linkedin: { label: 'LinkedIn', icon: Linkedin, color: 'text-sky-400' },
   podcast: { label: 'Podcast', icon: Mic, color: 'text-amber-400' },
   briefing: { label: 'Briefing', icon: Users, color: 'text-emerald-400' },
+  trade_media: { label: 'Trade Media', icon: Megaphone, color: 'text-rose-400' },
 };
 
 const TYPE_FILTERS = [
@@ -53,6 +55,7 @@ const TYPE_FILTERS = [
   { id: 'linkedin', label: 'LinkedIn' },
   { id: 'podcast', label: 'Podcast' },
   { id: 'briefing', label: 'Briefing' },
+  { id: 'trade_media', label: 'Trade Media' },
 ];
 
 const SORT_OPTIONS = [

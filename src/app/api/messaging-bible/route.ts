@@ -1,0 +1,98 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth';
+import { getDb } from '@/lib/db';
+import { sql } from '@vercel/postgres';
+import { v4 as uuidv4 } from 'uuid';
+import { sanitizeString } from '@/lib/validation';
+
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  await getDb();
+  const companyResult = await sql`SELECT * FROM companies WHERE user_id = ${user.id}`;
+  const company = companyResult.rows[0];
+  if (!company) return NextResponse.json({ bible: null });
+
+  const result = await sql`
+    SELECT * FROM messaging_bibles WHERE company_id = ${company.id} ORDER BY updated_at DESC LIMIT 1
+  `;
+
+  return NextResponse.json({ bible: result.rows[0] || null, company });
+}
+
+export async function POST(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const body = await request.json();
+    await getDb();
+
+    const companyResult = await sql`SELECT * FROM companies WHERE user_id = ${user.id}`;
+    let company = companyResult.rows[0];
+
+    // Create company if it doesn't exist
+    if (!company) {
+      const companyId = uuidv4();
+      await sql`
+        INSERT INTO companies (id, user_id, name, type, niche, description)
+        VALUES (${companyId}, ${user.id}, ${sanitizeString(body.companyName || 'My Company', 200)}, ${sanitizeString(body.companyType || '', 100)}, ${sanitizeString(body.niche || '', 200)}, ${sanitizeString(body.companyDescription || '', 2000)})
+      `;
+      const newResult = await sql`SELECT * FROM companies WHERE id = ${companyId}`;
+      company = newResult.rows[0];
+    } else {
+      // Update company with new info
+      if (body.companyDescription) {
+        await sql`
+          UPDATE companies SET
+            description = ${sanitizeString(body.companyDescription, 2000)},
+            type = COALESCE(NULLIF(${sanitizeString(body.companyType || '', 100)}, ''), type),
+            niche = COALESCE(NULLIF(${sanitizeString(body.niche || '', 200)}, ''), niche),
+            updated_at = NOW()
+          WHERE id = ${company.id}
+        `;
+      }
+    }
+
+    // Check for existing bible
+    const existingResult = await sql`
+      SELECT id FROM messaging_bibles WHERE company_id = ${company.id} ORDER BY updated_at DESC LIMIT 1
+    `;
+
+    const bibleId = existingResult.rows[0]?.id || uuidv4();
+
+    const targetAudiences = JSON.stringify(body.targetAudiences || []);
+    const competitors = JSON.stringify(body.competitors || []);
+    const differentiators = JSON.stringify(body.differentiators || []);
+    const keyChallenges = JSON.stringify(body.keyChallenges || []);
+    const departments = JSON.stringify(body.departments || []);
+    const channels = JSON.stringify(body.channels || ['linkedin', 'email', 'trade_media']);
+
+    if (existingResult.rows[0]) {
+      await sql`
+        UPDATE messaging_bibles SET
+          company_description = ${sanitizeString(body.companyDescription || '', 2000)},
+          target_audiences = ${targetAudiences},
+          competitors = ${competitors},
+          differentiators = ${differentiators},
+          key_challenges = ${keyChallenges},
+          departments = ${departments},
+          channels = ${channels},
+          status = 'draft',
+          updated_at = NOW()
+        WHERE id = ${bibleId}
+      `;
+    } else {
+      await sql`
+        INSERT INTO messaging_bibles (id, company_id, company_description, target_audiences, competitors, differentiators, key_challenges, departments, channels)
+        VALUES (${bibleId}, ${company.id}, ${sanitizeString(body.companyDescription || '', 2000)}, ${targetAudiences}, ${competitors}, ${differentiators}, ${keyChallenges}, ${departments}, ${channels})
+      `;
+    }
+
+    return NextResponse.json({ success: true, bibleId });
+  } catch (error) {
+    console.error('Messaging bible save error:', error);
+    return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
+  }
+}

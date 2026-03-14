@@ -8,7 +8,7 @@ import { sql } from '@vercel/postgres';
 import { getDb } from '@/lib/db';
 import { sanitizeString, rateLimit } from '@/lib/validation';
 
-const VALID_CONTENT_TYPES = ['newsletter', 'linkedin', 'podcast', 'briefing'];
+const VALID_CONTENT_TYPES = ['newsletter', 'linkedin', 'podcast', 'briefing', 'trade_media'];
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { articleIds, contentTypes } = await request.json();
+    const { articleIds, contentTypes, channel, department } = await request.json();
 
     if (!Array.isArray(articleIds) || articleIds.length === 0 || articleIds.length > 20) {
       return NextResponse.json({ error: 'Select between 1 and 20 articles' }, { status: 400 });
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results = await generateContent(articles, company as any, validTypes);
+    const results = await generateContent(articles, company as any, validTypes, { channel, department });
     // Track one usage event per content type generated (not per request)
     for (const ct of validTypes) {
       await trackUsage(user.id, 'content_generated', { articleCount: articles.length, contentType: ct });

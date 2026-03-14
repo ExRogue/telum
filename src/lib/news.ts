@@ -115,6 +115,42 @@ export async function searchNews(query: string, limit = 20): Promise<NewsArticle
   return result.rows as unknown as NewsArticle[];
 }
 
+export async function getNewsByTimeframe(
+  timeframe: string,
+  limit = 20,
+  category?: string
+): Promise<NewsArticle[]> {
+  await getDb();
+
+  if (category && category !== 'all') {
+    switch (timeframe) {
+      case '24h':
+        return (await sql`SELECT * FROM news_articles WHERE category = ${category} AND published_at >= NOW() - INTERVAL '24 hours' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+      case '7d':
+        return (await sql`SELECT * FROM news_articles WHERE category = ${category} AND published_at >= NOW() - INTERVAL '7 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+      case '30d':
+        return (await sql`SELECT * FROM news_articles WHERE category = ${category} AND published_at >= NOW() - INTERVAL '30 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+      case '90d':
+        return (await sql`SELECT * FROM news_articles WHERE category = ${category} AND published_at >= NOW() - INTERVAL '90 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+      default:
+        return (await sql`SELECT * FROM news_articles WHERE category = ${category} AND published_at >= NOW() - INTERVAL '7 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+    }
+  }
+
+  switch (timeframe) {
+    case '24h':
+      return (await sql`SELECT * FROM news_articles WHERE published_at >= NOW() - INTERVAL '24 hours' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+    case '7d':
+      return (await sql`SELECT * FROM news_articles WHERE published_at >= NOW() - INTERVAL '7 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+    case '30d':
+      return (await sql`SELECT * FROM news_articles WHERE published_at >= NOW() - INTERVAL '30 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+    case '90d':
+      return (await sql`SELECT * FROM news_articles WHERE published_at >= NOW() - INTERVAL '90 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+    default:
+      return (await sql`SELECT * FROM news_articles WHERE published_at >= NOW() - INTERVAL '7 days' ORDER BY published_at DESC LIMIT ${limit}`).rows as unknown as NewsArticle[];
+  }
+}
+
 function extractTags(title: string, content: string): string[] {
   const text = `${title} ${content}`.toLowerCase();
   const tags: string[] = [];

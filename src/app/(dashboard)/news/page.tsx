@@ -17,6 +17,12 @@ import {
   Eye,
   Trash2,
   Check,
+  Lightbulb,
+  Linkedin,
+  Mail,
+  Megaphone,
+  Copy,
+  Loader2,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -33,6 +39,33 @@ interface NewsArticle {
   tags: string;
   published_at: string;
 }
+
+interface ContentAngle {
+  type: string;
+  headline: string;
+  angle: string;
+  channel: string;
+  spokesperson_quote: string;
+}
+
+const TIME_FILTERS = [
+  { id: 'all', label: 'All Time' },
+  { id: '24h', label: 'Last 24h' },
+  { id: '7d', label: 'Last 7 Days' },
+  { id: '30d', label: 'Last 30 Days' },
+];
+
+const CHANNEL_ICONS: Record<string, any> = {
+  linkedin: Linkedin,
+  email: Mail,
+  trade_media: Megaphone,
+};
+
+const CHANNEL_COLORS: Record<string, string> = {
+  linkedin: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+  email: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  trade_media: 'text-rose-400 bg-rose-400/10 border-rose-400/20',
+};
 
 const CATEGORY_FILTERS = [
   { id: 'all', label: 'All' },
@@ -118,12 +151,18 @@ export default function NewsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [error, setError] = useState('');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [angles, setAngles] = useState<Record<string, ContentAngle[]>>({});
+  const [anglesLoading, setAnglesLoading] = useState<string | null>(null);
+  const [anglesOpen, setAnglesOpen] = useState<string | null>(null);
+  const [copiedAngle, setCopiedAngle] = useState<string | null>(null);
 
   const fetchArticles = useCallback(async () => {
     setError('');
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
     if (activeCategory !== 'all' && !searchQuery) params.set('category', activeCategory);
+    if (timeFilter !== 'all') params.set('timeframe', timeFilter);
     params.set('limit', '50');
 
     const res = await fetch(`/api/news?${params.toString()}`);
@@ -138,7 +177,7 @@ export default function NewsPage() {
       return;
     }
     setArticles(data.articles || []);
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, timeFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -260,6 +299,37 @@ export default function NewsPage() {
     }
   };
 
+  const handleSuggestAngles = async (e: React.MouseEvent, articleId: string) => {
+    e.stopPropagation();
+    if (angles[articleId]) {
+      setAnglesOpen(anglesOpen === articleId ? null : articleId);
+      return;
+    }
+    setAnglesLoading(articleId);
+    setAnglesOpen(articleId);
+    try {
+      const res = await fetch('/api/news/angles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.angles) {
+        setAngles((prev) => ({ ...prev, [articleId]: data.angles }));
+      }
+    } catch (err) {
+      console.error('Angles error:', err);
+    } finally {
+      setAnglesLoading(null);
+    }
+  };
+
+  const handleCopyAngle = async (text: string, key: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedAngle(key);
+    setTimeout(() => setCopiedAngle(null), 2000);
+  };
+
   // Apply client-side category filter when browsing (not searching)
   const filtered = searchQuery
     ? articles
@@ -288,7 +358,7 @@ export default function NewsPage() {
   // Reset to page 1 when search/filter/sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, activeCategory, sortBy]);
+  }, [searchQuery, activeCategory, sortBy, timeFilter]);
 
   // Group by source for source stats
   const sourceCounts: Record<string, number> = {};
@@ -412,6 +482,24 @@ export default function NewsPage() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Time filters */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Clock className="w-4 h-4 text-[var(--text-secondary)]" />
+          {TIME_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setTimeFilter(f.id)}
+              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                timeFilter === f.id
+                  ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--navy-lighter)]'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         {/* Category filters */}
@@ -657,6 +745,74 @@ export default function NewsPage() {
                           ))}
                         </div>
                       )}
+
+                      {/* Suggest Angles Button */}
+                      <div className="pt-2 border-t border-[var(--border)]">
+                        <button
+                          onClick={(e) => handleSuggestAngles(e, article.id)}
+                          disabled={anglesLoading === article.id}
+                          className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors disabled:opacity-50"
+                        >
+                          {anglesLoading === article.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Lightbulb className="w-3.5 h-3.5" />
+                          )}
+                          {angles[article.id] ? (anglesOpen === article.id ? 'Hide Angles' : 'Show Angles') : 'Suggest Content Angles'}
+                        </button>
+
+                        {/* Angles Panel */}
+                        {anglesOpen === article.id && angles[article.id] && (
+                          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                            {angles[article.id].map((angle, idx) => {
+                              const ChannelIcon = CHANNEL_ICONS[angle.channel] || Megaphone;
+                              const colorClasses = CHANNEL_COLORS[angle.channel] || 'text-[var(--text-secondary)] bg-[var(--navy-lighter)] border-[var(--border)]';
+                              const angleKey = `${article.id}-${idx}`;
+                              return (
+                                <div key={idx} className={`rounded-lg border p-3 ${colorClasses}`}>
+                                  <div className="flex items-center gap-1.5 mb-2">
+                                    <ChannelIcon className="w-3.5 h-3.5" />
+                                    <span className="text-xs font-semibold uppercase tracking-wider">{angle.type}</span>
+                                  </div>
+                                  <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1.5 leading-snug">
+                                    {angle.headline}
+                                  </h5>
+                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-2">
+                                    {angle.angle}
+                                  </p>
+                                  {angle.spokesperson_quote && (
+                                    <blockquote className="text-xs italic text-[var(--text-secondary)] border-l-2 border-current pl-2 mb-2 opacity-80">
+                                      {angle.spokesperson_quote}
+                                    </blockquote>
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyAngle(
+                                        `${angle.headline}\n\n${angle.angle}\n\n${angle.spokesperson_quote || ''}`,
+                                        angleKey
+                                      );
+                                    }}
+                                    className="inline-flex items-center gap-1 text-xs opacity-70 hover:opacity-100 transition-opacity"
+                                  >
+                                    {copiedAngle === angleKey ? (
+                                      <>
+                                        <Check className="w-3 h-3" />
+                                        Copied
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="w-3 h-3" />
+                                        Copy
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

@@ -30,7 +30,7 @@ export interface GeneratedContent {
   created_at: string;
 }
 
-type ContentType = 'newsletter' | 'linkedin' | 'podcast' | 'briefing';
+type ContentType = 'newsletter' | 'linkedin' | 'podcast' | 'briefing' | 'trade_media';
 
 const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
 
@@ -111,9 +111,28 @@ Write it as a complete, ready-to-read script.`,
 5. Confidentiality notice and regulatory disclaimer
 
 This should be a professional, boardroom-ready document.`,
+
+  trade_media: `Generate a trade media pitch package. Structure:
+1. Press release headline (attention-grabbing, newsworthy)
+2. Sub-headline with company angle
+3. Press release body (3-4 paragraphs):
+   - Opening: The news hook tied to the article topic
+   - Company perspective: How [Company] views this development
+   - Expert quote placeholder: "[SPOKESPERSON NAME, TITLE at COMPANY] said: '[Generate an insightful, quotable comment about this development that positions the company as a thought leader. Make it specific and opinionated, not generic.]'"
+   - Call to action / availability for interview
+4. Boilerplate: Brief company description
+5. Media contact template
+6. Suggested pitch email (2-3 sentences to send to journalists)
+
+Make the spokesperson quote provocative and insightful — something a journalist would actually want to use. The angle should be slightly controversial or forward-looking, backed by industry expertise.`,
 };
 
-async function generateWithClaude(articles: NewsArticle[], company: Company, contentType: ContentType): Promise<{ title: string; content: string }> {
+async function generateWithClaude(
+  articles: NewsArticle[],
+  company: Company,
+  contentType: ContentType,
+  options?: { channel?: string; department?: string; }
+): Promise<{ title: string; content: string }> {
   if (!anthropic) {
     // Fall back to template-based generation if no API key
     return generateWithTemplate(articles, company, contentType);
@@ -122,6 +141,30 @@ async function generateWithClaude(articles: NewsArticle[], company: Company, con
   const articleContext = buildArticleContext(articles);
   const companyContext = buildCompanyContext(company);
   const typePrompt = TYPE_PROMPTS[contentType];
+
+  let channelInstructions = '';
+  if (options?.channel === 'linkedin') {
+    channelInstructions = '\n\nChannel: LinkedIn. Use a punchy, provocative tone. Lead with a bold statement or contrarian take. Keep paragraphs short (1-2 sentences). End with a question to drive engagement. Use relevant hashtags.';
+  } else if (options?.channel === 'email') {
+    channelInstructions = '\n\nChannel: Email Newsletter. Use a structured, value-led format. Include clear section headers. Be more detailed and analytical than social media. Include a clear CTA.';
+  } else if (options?.channel === 'trade_media') {
+    channelInstructions = '\n\nChannel: Trade Media/PR. Write for journalists. Lead with the newsworthy angle. Include a quotable spokesperson comment. Keep it factual but with a clear opinion angle.';
+  }
+
+  let departmentContext = '';
+  if (options?.department) {
+    const deptMap: Record<string, string> = {
+      'c-suite': 'Target audience: C-Suite executives. Focus on strategic implications, market positioning, and business impact. Use high-level language, avoid technical details.',
+      'underwriting': 'Target audience: Underwriting teams. Focus on risk assessment implications, pricing impact, and portfolio considerations. Be technical and specific.',
+      'claims': 'Target audience: Claims department. Focus on claims trends, settlement implications, and operational impact.',
+      'technology': 'Target audience: IT/Technology teams. Focus on technical implementation, integration considerations, and technology trends.',
+      'compliance': 'Target audience: Compliance officers. Focus on regulatory implications, reporting requirements, and risk management frameworks.',
+      'operations': 'Target audience: Operations teams. Focus on process impact, efficiency considerations, and practical implementation.',
+      'marketing': 'Target audience: Marketing teams. Focus on messaging opportunities, brand positioning, and market differentiation.',
+      'sales': 'Target audience: Sales teams. Focus on conversation starters, objection handling, and competitive positioning.',
+    };
+    departmentContext = `\n\n${deptMap[options.department] || ''}`;
+  }
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
@@ -134,7 +177,7 @@ async function generateWithClaude(articles: NewsArticle[], company: Company, con
 Source Articles:
 ${articleContext}
 
-Task: ${typePrompt}
+Task: ${typePrompt}${channelInstructions}${departmentContext}
 
 Generate the ${contentType} content now. Output only the content itself, no meta-commentary.`,
     }],
@@ -158,13 +201,15 @@ function generateWithTemplate(articles: NewsArticle[], company: Company, content
     case 'linkedin': return generateLinkedIn(articles, company);
     case 'podcast': return generatePodcast(articles, company);
     case 'briefing': return generateBriefing(articles, company);
+    case 'trade_media': return generateTradeMedia(articles, company);
   }
 }
 
 export async function generateContent(
   articles: NewsArticle[],
   company: Company,
-  contentTypes: ContentType[]
+  contentTypes: ContentType[],
+  options?: { channel?: string; department?: string; }
 ): Promise<GeneratedContent[]> {
   const results: GeneratedContent[] = [];
   await getDb();
@@ -172,7 +217,7 @@ export async function generateContent(
   const frameworks = JSON.parse(company.compliance_frameworks || '["FCA"]');
 
   for (const type of contentTypes) {
-    const { title, content } = await generateWithClaude(articles, company, type);
+    const { title, content } = await generateWithClaude(articles, company, type, options);
 
     // Run compliance check
     const compliance = checkCompliance(content, frameworks);
@@ -257,6 +302,59 @@ function generateBriefing(articles: NewsArticle[], company: Company): { title: s
   });
 
   const content = `# ${title}\n\n**Classification:** For Client Distribution\n**Date:** ${today.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}\n**Prepared by:** ${company.name} Market Intelligence\n**Niche Focus:** ${niche}\n\n---\n\n## Executive Summary\n\nThis briefing covers ${articles.length} key market developments relevant to ${niche.toLowerCase()} from the past week.\n\n---\n\n## Key Developments\n\n${developments.join('\n\n---\n\n')}\n\n---\n\n## Forward Look\n\nBased on the developments outlined above, we anticipate continued market attention on these themes through the upcoming renewal season.\n\n---\n\n*This document is prepared by ${company.name} for the exclusive use of its clients and business partners. It does not constitute insurance or financial advice.*\n\n*${company.name} is authorised and regulated by the Financial Conduct Authority.*`;
+
+  return { title, content };
+}
+
+function generateTradeMedia(articles: NewsArticle[], company: Company): { title: string; content: string } {
+  const niche = company.niche || 'Specialty Insurance';
+  const mainArticle = articles[0];
+  const tags = JSON.parse(mainArticle.tags || '[]');
+  const title = `${company.name} — Trade Media Pitch: ${mainArticle.title.substring(0, 60)}`;
+
+  const content = `# PRESS RELEASE: ${mainArticle.title}
+
+## ${company.name} Weighs In on Key ${niche} Market Development
+
+**FOR IMMEDIATE RELEASE**
+
+**${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}**
+
+---
+
+${mainArticle.summary}
+
+As a leading ${company.type === 'mga' ? 'Managing General Agent' : company.type === 'broker' ? 'broker' : 'insurtech firm'} in the ${niche.toLowerCase()} space, ${company.name} sees this development as a significant indicator of where the market is heading.
+
+"[SPOKESPERSON NAME, TITLE at ${company.name}] said: '${generateInsight(mainArticle, company)} The industry needs to move beyond reactive positioning and start building frameworks that anticipate these shifts. Those who adapt early will capture the opportunity; those who wait will find themselves playing catch-up.'"
+
+${company.name} is available for expert commentary on this and related ${niche.toLowerCase()} developments. To arrange an interview, please contact the media team below.
+
+---
+
+## About ${company.name}
+
+${company.description || `${company.name} is a ${company.type === 'mga' ? 'Managing General Agent' : company.type === 'broker' ? 'specialist broker' : 'insurtech company'} focused on the ${niche.toLowerCase()} market.`}
+
+---
+
+## Media Contact
+
+**Name:** [Media Contact Name]
+**Email:** press@${company.name.toLowerCase().replace(/\\s+/g, '')}.com
+**Phone:** [Phone Number]
+
+---
+
+## Suggested Pitch Email
+
+Subject: Expert comment available: ${mainArticle.title.substring(0, 50)}
+
+Hi [Journalist Name],
+
+Following the recent developments around ${tags[0] || niche.toLowerCase()}, ${company.name} has a strong perspective on what this means for the ${niche.toLowerCase()} market. Our spokesperson is available for interview and can provide expert commentary on the implications for the wider industry.
+
+Would you be interested in a quote or a brief call?`;
 
   return { title, content };
 }

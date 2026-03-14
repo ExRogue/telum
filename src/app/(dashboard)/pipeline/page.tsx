@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Filter,
   X,
+  Megaphone,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -49,6 +50,26 @@ const CONTENT_TYPES = [
   { id: 'linkedin', label: 'LinkedIn Posts', icon: Linkedin, desc: 'Thought leadership social content' },
   { id: 'podcast', label: 'Podcast Script', icon: Mic, desc: 'Structured audio episode script' },
   { id: 'briefing', label: 'Client Briefing', icon: Users, desc: 'Professional client market update' },
+  { id: 'trade_media', label: 'Trade Media Pitch', icon: Megaphone, desc: 'PR pitch with spokesperson quote' },
+];
+
+const CHANNEL_OPTIONS = [
+  { id: '', label: 'Auto (default)' },
+  { id: 'linkedin', label: 'LinkedIn' },
+  { id: 'email', label: 'Email' },
+  { id: 'trade_media', label: 'Trade Media' },
+];
+
+const DEPARTMENT_OPTIONS = [
+  { id: '', label: 'General audience' },
+  { id: 'c-suite', label: 'C-Suite' },
+  { id: 'underwriting', label: 'Underwriting' },
+  { id: 'claims', label: 'Claims' },
+  { id: 'technology', label: 'IT / Technology' },
+  { id: 'compliance', label: 'Compliance' },
+  { id: 'operations', label: 'Operations' },
+  { id: 'marketing', label: 'Marketing' },
+  { id: 'sales', label: 'Sales' },
 ];
 
 const CATEGORIES = [
@@ -76,6 +97,8 @@ export default function PipelinePage() {
   const [generating, setGenerating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [channel, setChannel] = useState('');
+  const [department, setDepartment] = useState('');
   const [usage, setUsage] = useState<{ content_pieces_used: number; content_pieces_limit: number } | null>(null);
 
   useEffect(() => {
@@ -163,6 +186,8 @@ export default function PipelinePage() {
         body: JSON.stringify({
           articleIds: Array.from(selectedArticles),
           contentTypes: Array.from(selectedTypes),
+          channel: channel || undefined,
+          department: department || undefined,
         }),
       });
       const data = await res.json();
@@ -460,6 +485,44 @@ export default function PipelinePage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Channel optimisation */}
+        <div>
+          <h3 className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] mb-2 sm:mb-3">
+            Channel Optimisation <span className="text-[var(--text-secondary)] font-normal">(optional)</span>
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {CHANNEL_OPTIONS.map(ch => (
+              <button
+                key={ch.id}
+                onClick={() => setChannel(ch.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                  channel === ch.id
+                    ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20'
+                    : 'text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--accent)]/20'
+                }`}
+              >
+                {ch.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Department targeting */}
+        <div>
+          <h3 className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] mb-2 sm:mb-3">
+            Department Focus <span className="text-[var(--text-secondary)] font-normal">(optional)</span>
+          </h3>
+          <select
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="w-full sm:w-auto bg-[var(--navy-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] cursor-pointer"
+          >
+            {DEPARTMENT_OPTIONS.map(d => (
+              <option key={d.id} value={d.id}>{d.label}</option>
+            ))}
+          </select>
         </div>
 
         {atContentLimit && (

@@ -15,11 +15,13 @@ import {
   CreditCard,
   Menu,
   X,
+  BookOpen,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/messaging-bible', label: 'Messaging Bible', icon: BookOpen },
   { href: '/pipeline', label: 'Pipeline', icon: Zap },
   { href: '/content', label: 'Content', icon: FileText },
   { href: '/news', label: 'News Feed', icon: Newspaper },
