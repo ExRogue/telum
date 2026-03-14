@@ -964,9 +964,29 @@ export default function PipelinePage() {
       ));
     };
 
+    const persistVoiceEdit = async (item: ReviewItem) => {
+      if (item.editedContent === item.content) return;
+      try {
+        await fetch('/api/content/edit', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content_id: item.id,
+            edited_text: item.editedContent,
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to persist voice edit:', err);
+      }
+    };
+
     const updateStatus = (id: string, status: ReviewItem['status']) => {
-      setReviewItems(prev => prev.map(item =>
-        item.id === id ? { ...item, status } : item
+      const item = reviewItems.find(r => r.id === id);
+      if (item) {
+        persistVoiceEdit(item);
+      }
+      setReviewItems(prev => prev.map(r =>
+        r.id === id ? { ...r, status } : r
       ));
     };
 

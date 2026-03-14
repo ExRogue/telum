@@ -398,7 +398,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-[var(--border)]">
             {news.length === 0 ? (
               <div className="p-4 sm:p-5 text-center text-xs sm:text-sm text-[var(--text-secondary)]">
-                No news articles yet. Visit the Pipeline to fetch news.
+                No news articles yet. <Link href="/pipeline" className="text-[var(--accent)] hover:underline">Visit the Pipeline</Link> to fetch news.
               </div>
             ) : (
               news.map((article) => {
@@ -436,7 +436,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-[var(--border)]">
             {content.length === 0 ? (
               <div className="p-4 sm:p-5 text-center text-xs sm:text-sm text-[var(--text-secondary)]">
-                No content generated yet. Use the Pipeline to create your first piece.
+                No content generated yet. <Link href="/pipeline" className="text-[var(--accent)] hover:underline">Use the Pipeline</Link> to create your first piece.
               </div>
             ) : (
               content.map((item) => (

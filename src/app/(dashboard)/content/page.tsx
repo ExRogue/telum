@@ -1,6 +1,7 @@
 'use client';
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   FileText,
   Mail,
@@ -559,7 +560,7 @@ function ContentPageInner() {
           <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">No content yet</h3>
           <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto">
             {allContent.length === 0
-              ? 'Head to the Pipeline to generate your first piece of content from industry news.'
+              ? <span>Head to the <Link href="/pipeline" className="text-[var(--accent)] hover:underline">Pipeline</Link> to generate your first piece of content from industry news.</span>
               : 'No content matches your current filters. Try adjusting your search or filter.'}
           </p>
         </div>

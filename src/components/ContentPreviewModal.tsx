@@ -34,7 +34,21 @@ export default function ContentPreviewModal({ content, onClose, onSave }: Props)
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (editedContent !== content.content) {
+      try {
+        await fetch('/api/content/edit', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content_id: content.id,
+            edited_text: editedContent,
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to persist voice edit:', err);
+      }
+    }
     if (onSave) {
       onSave({ ...content, content: editedContent });
     }
