@@ -515,6 +515,7 @@ export default function MessagingBiblePage() {
   const [existingBible, setExistingBible] = useState<any>(null);
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [error, setError] = useState('');
+  const [onboardingStarted, setOnboardingStarted] = useState(false);
 
   // Live demo state
   const [demoStage, setDemoStage] = useState<'idle' | 'searching' | 'drafting' | 'done' | 'skipped'>('idle');
@@ -765,6 +766,90 @@ export default function MessagingBiblePage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Show onboarding when no existing bible and no company data entered
+  const hasNoData = !existingBible && !companyName && !generatedDoc && !onboardingStarted;
+
+  if (hasNoData) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-[var(--accent)]" />
+            Messaging Bible
+          </h1>
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+            Define your brand voice, positioning, and messaging strategy across all channels
+          </p>
+        </div>
+
+        <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8 sm:p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 flex items-center justify-center mx-auto mb-6">
+            <BookOpen className="w-8 h-8 text-[var(--accent)]" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-3">
+            Welcome to Your Messaging Bible
+          </h2>
+          <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto mb-8">
+            Your Messaging Bible is the foundation of everything Telum does — from finding relevant news to drafting on-brand content. Let&apos;s set it up so we can start working for you.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto mb-8">
+            <div className="bg-[var(--navy)] border border-[var(--border)] rounded-xl p-5 text-left">
+              <div className="w-10 h-10 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center mb-3">
+                <MessageSquare className="w-5 h-5 text-[var(--accent)]" />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Interview Mode</h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Answer questions in a guided conversation. Our AI builds your bible from your answers — the fastest way to get started.
+              </p>
+              <button
+                onClick={() => { setMode('interview'); setOnboardingStarted(true); }}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Start Interview
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-[var(--navy)] border border-[var(--border)] rounded-xl p-5 text-left">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3">
+                <ClipboardList className="w-5 h-5 text-purple-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Form Mode</h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Fill in structured fields step by step — company details, audiences, competitors, and channels. Best if you know exactly what to enter.
+              </p>
+              <button
+                onClick={() => { setMode('form'); setOnboardingStarted(true); }}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--navy-lighter)] hover:bg-[var(--border)] text-[var(--text-primary)] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Use Form
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-6 text-xs text-[var(--text-secondary)]">
+            <span className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              Takes ~5 minutes
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+              AI-generated output
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Pen className="w-3.5 h-3.5 text-emerald-400" />
+              Fully editable
+            </span>
+          </div>
+        </div>
       </div>
     );
   }

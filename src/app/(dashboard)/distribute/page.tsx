@@ -72,7 +72,7 @@ const TYPE_LABELS: Record<string, string> = {
   trade_media: 'Trade Media',
 };
 
-type TabId = 'queue' | 'scheduled' | 'published' | 'analytics';
+type TabId = 'queue' | 'drafts' | 'scheduled' | 'published' | 'analytics';
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
@@ -153,12 +153,16 @@ export default function DistributePage() {
         return;
       }
 
+      // Navigate to the appropriate tab based on what was created
+      const createdStatus = scheduledDate ? 'scheduled' : 'drafts';
+
       // Reset and reload
       setShowDistributeModal(null);
       setSelectedChannel('');
       setScheduledDate('');
       setDistributionNotes('');
       await loadData();
+      setActiveTab(createdStatus as TabId);
     } catch {
       setError('Failed to create distribution');
     } finally {
@@ -181,11 +185,13 @@ export default function DistributePage() {
     }
   };
 
+  const drafts = distributions.filter(d => d.status === 'draft');
   const scheduled = distributions.filter(d => d.status === 'scheduled');
   const published = distributions.filter(d => d.status === 'published');
 
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: 'queue', label: 'Content Queue', count: availableContent.length },
+    { id: 'drafts', label: 'Drafts', count: drafts.length },
     { id: 'scheduled', label: 'Scheduled', count: scheduled.length },
     { id: 'published', label: 'Published', count: published.length },
     { id: 'analytics', label: 'Analytics' },
@@ -333,6 +339,83 @@ export default function DistributePage() {
                   </Button>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'drafts' && (
+        <div className="space-y-4">
+          {drafts.length === 0 ? (
+            <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8 sm:p-12 text-center">
+              <FileText className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4 opacity-40" />
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] mb-2">No drafts</h3>
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-md mx-auto">
+                Create a distribution without a schedule date to save it as a draft.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {drafts.map(dist => {
+                const channelMeta = CHANNEL_META[dist.channel] || CHANNEL_META.linkedin;
+                const ChannelIcon = channelMeta.icon;
+                return (
+                  <div
+                    key={dist.id}
+                    className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-[var(--navy-lighter)] flex items-center justify-center flex-shrink-0">
+                        <ChannelIcon className={`w-5 h-5 ${channelMeta.color}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] line-clamp-1">
+                          {dist.content_title || 'Untitled'}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <Badge variant="default">{channelMeta.label}</Badge>
+                          <Badge variant="warning">Draft</Badge>
+                          <span className="text-[11px] sm:text-xs text-[var(--text-secondary)] flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatTime(dist.created_at)}
+                          </span>
+                        </div>
+                        {dist.notes && (
+                          <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] mt-1 line-clamp-1">{dist.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleUpdateStatus(dist.id, 'published')}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Send className="w-3.5 h-3.5 mr-1.5" />
+                        Publish
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleUpdateStatus(dist.id, 'scheduled')}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                        Schedule
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleUpdateStatus(dist.id, 'cancelled')}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
