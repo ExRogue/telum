@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
 
     await getDb();
 
+    // Disable user first to prevent new activity during deletion
+    await sql`UPDATE users SET disabled = true, updated_at = NOW() WHERE id = ${user.id}`;
+
     // Cancel active subscriptions
     await sql`UPDATE subscriptions SET status = 'cancelled', updated_at = NOW() WHERE user_id = ${user.id} AND status = 'active'`;
 
@@ -22,12 +25,19 @@ export async function POST(request: NextRequest) {
     const companies = await sql`SELECT id FROM companies WHERE user_id = ${user.id}`;
     const companyIds = companies.rows.map(c => c.id);
 
-    // Delete generated content
+    // Delete company-scoped data
     for (const companyId of companyIds) {
       await sql`DELETE FROM generated_content WHERE company_id = ${companyId}`;
+      await sql`DELETE FROM custom_templates WHERE company_id = ${companyId}`;
+      await sql`DELETE FROM team_members WHERE company_id = ${companyId}`;
+      await sql`DELETE FROM team_invites WHERE company_id = ${companyId}`;
     }
 
-    // Delete related data
+    // Delete user-scoped data (leaf tables first)
+    await sql`DELETE FROM user_article_actions WHERE user_id = ${user.id}`;
+    await sql`DELETE FROM api_keys WHERE user_id = ${user.id}`;
+    await sql`DELETE FROM password_resets WHERE user_id = ${user.id}`;
+    await sql`DELETE FROM email_verifications WHERE user_id = ${user.id}`;
     await sql`DELETE FROM notifications WHERE user_id = ${user.id}`;
     await sql`DELETE FROM usage_events WHERE user_id = ${user.id}`;
     await sql`DELETE FROM usage_alerts WHERE user_id = ${user.id}`;
@@ -42,7 +52,6 @@ export async function POST(request: NextRequest) {
         email = ${anonymisedEmail},
         name = 'Deleted User',
         password_hash = 'DELETED',
-        disabled = true,
         updated_at = NOW()
       WHERE id = ${user.id}
     `;

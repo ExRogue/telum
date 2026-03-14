@@ -65,6 +65,6 @@ export async function deleteOldNotifications(userId: string, daysOld: number = 3
   await sql`
     DELETE FROM notifications
     WHERE user_id = ${userId}
-    AND created_at < NOW() - INTERVAL '${daysOld} days'
+    AND created_at < NOW() - INTERVAL '1 day' * ${daysOld}
   `;
 }

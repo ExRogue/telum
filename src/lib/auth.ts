@@ -9,10 +9,13 @@ const TOKEN_EXPIRY = '7d';
 
 function getSecret(): string {
   const secret = process.env.JWT_SECRET;
-  if (!secret && process.env.NODE_ENV === 'production') {
-    console.warn('WARNING: JWT_SECRET not set in production!');
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET must be set in production');
+    }
+    return 'telum-dev-secret-local-only';
   }
-  return secret || 'telum-dev-secret-change-in-production';
+  return secret;
 }
 
 // bcryptjs 3.x is ESM — resolve hash/compare from default or named exports
@@ -58,7 +61,7 @@ export async function register(email: string, password: string, name: string): P
 export async function login(email: string, password: string): Promise<AuthResult> {
   await getDb();
 
-  const result = await sql`SELECT * FROM users WHERE email = ${email}`;
+  const result = await sql`SELECT * FROM users WHERE email = ${email} AND disabled = false`;
   const row = result.rows[0];
   if (!row) {
     return { success: false, error: 'Invalid email or password' };
@@ -93,7 +96,7 @@ export async function getCurrentUser(): Promise<User | null> {
     if (!payload) return null;
 
     await getDb();
-    const result = await sql`SELECT id, email, name, role, created_at FROM users WHERE id = ${payload.userId}`;
+    const result = await sql`SELECT id, email, name, role, created_at FROM users WHERE id = ${payload.userId} AND disabled = false`;
     const row = result.rows[0];
     if (row) return row as unknown as User;
 

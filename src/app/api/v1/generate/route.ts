@@ -17,14 +17,6 @@ async function authenticateApiKey(request: NextRequest): Promise<string | null> 
   const keyHash = crypto.createHash('sha256').update(key).digest('hex');
 
   await getDb();
-  await sql`
-    CREATE TABLE IF NOT EXISTS api_keys (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
-      key_hash TEXT NOT NULL, key_prefix TEXT NOT NULL,
-      permissions TEXT DEFAULT '["read","generate"]',
-      last_used_at TIMESTAMP, revoked_at TIMESTAMP, created_at TIMESTAMP DEFAULT NOW()
-    )
-  `;
 
   const result = await sql`
     SELECT user_id FROM api_keys WHERE key_hash = ${keyHash} AND revoked_at IS NULL
