@@ -771,7 +771,7 @@ export default function MessagingBiblePage() {
   }
 
   // Show onboarding when no existing bible and no company data entered
-  const hasNoData = !existingBible && !companyName && !generatedDoc && !onboardingStarted;
+  const hasNoData = !existingBible && !generatedDoc && !onboardingStarted;
 
   if (hasNoData) {
     return (
