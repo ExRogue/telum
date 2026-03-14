@@ -5,11 +5,16 @@ import { sql } from '@vercel/postgres';
 const bcryptHash = (bcrypt as any).default?.hash || bcrypt.hash;
 
 const ADMIN_EMAIL = 'admin@telum.io';
-const ADMIN_PASSWORD = 'Telum2026!';
 const ADMIN_NAME = 'Telum Admin';
 
 // Called from initDb() — do NOT call getDb() here to avoid recursive initialization
 export async function seedAdmin() {
+  const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
+  if (!ADMIN_PASSWORD) {
+    console.log('ADMIN_SEED_PASSWORD not set — skipping admin seed');
+    return;
+  }
+
   const existing = await sql`SELECT id FROM users WHERE email = ${ADMIN_EMAIL}`;
 
   if (existing.rows.length > 0) {

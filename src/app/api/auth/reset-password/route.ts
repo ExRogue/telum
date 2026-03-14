@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { getDb } from '@/lib/db';
 import * as bcrypt from 'bcryptjs';
-import { rateLimit } from '@/lib/validation';
+import { rateLimit, validatePassword } from '@/lib/validation';
 
 const bcryptHash = (bcrypt as any).default?.hash || bcrypt.hash;
 
@@ -18,8 +18,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token and password are required' }, { status: 400 });
     }
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      return NextResponse.json({ error: passwordCheck.message }, { status: 400 });
     }
 
     await getDb();

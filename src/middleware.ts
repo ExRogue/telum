@@ -23,8 +23,6 @@ const PUBLIC_PATHS = [
   '/robots.txt',
 ];
 
-const ADMIN_PATHS = ['/api/admin', '/dashboard/admin'];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

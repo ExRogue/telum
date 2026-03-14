@@ -100,15 +100,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const row = result.rows[0];
     if (row) return row as unknown as User;
 
-    // On serverless cold start the DB might not have this user yet,
-    // but the JWT signature proves identity. Construct from token.
-    return {
-      id: payload.userId,
-      email: payload.email,
-      name: payload.email.split('@')[0],
-      role: 'user',
-      created_at: new Date().toISOString(),
-    };
+    return null;
   } catch {
     return null;
   }

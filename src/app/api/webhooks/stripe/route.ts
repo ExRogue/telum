@@ -28,6 +28,12 @@ export async function POST(request: NextRequest) {
 
         if (!userId || !planSlug) break;
 
+        // Idempotency: skip if we already have a subscription for this Stripe subscription ID
+        if (stripeSubscriptionId) {
+          const existingSub = await sql`SELECT id FROM subscriptions WHERE stripe_subscription_id = ${stripeSubscriptionId} LIMIT 1`;
+          if (existingSub.rows.length > 0) break;
+        }
+
         // Get plan
         const planResult = await sql`SELECT * FROM subscription_plans WHERE slug = ${planSlug}`;
         const plan = planResult.rows[0];

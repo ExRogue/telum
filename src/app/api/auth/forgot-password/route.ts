@@ -7,7 +7,8 @@ import { rateLimit } from '@/lib/validation';
 import * as crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit('forgot-password', 5, 300_000);
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const rl = rateLimit(`forgot-password:${ip}`, 5, 300_000);
   if (!rl.allowed) {
     return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
   }

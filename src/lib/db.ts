@@ -290,12 +290,14 @@ export async function initDb() {
   await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS custom_css TEXT DEFAULT ''`;
 
   // Seed data
-  await seedDemoArticles();
   await seedPlans();
   await seedAdminAccount();
-  await seedDemoNotifications();
-  await seedDemoInvoices();
-  await seedDemoContent();
+  if (process.env.NODE_ENV !== 'production') {
+    await seedDemoArticles();
+    await seedDemoNotifications();
+    await seedDemoInvoices();
+    await seedDemoContent();
+  }
 }
 
 let initialized = false;
