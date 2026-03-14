@@ -14,46 +14,75 @@ import {
   CheckCircle2,
   Loader2,
   Check,
+  BookOpen,
+  Radar,
+  PenTool,
+  Send,
+  TrendingUp,
+  Target,
+  Eye,
+  BarChart3,
+  Brain,
+  Megaphone,
+  ChevronRight,
+  Quote,
+  RefreshCw,
 } from 'lucide-react';
 
-const FEATURE_ICONS = [Newspaper, Zap, ShieldCheck, FileText];
-const FEATURE_COLORS = ['var(--accent)', '#7DC4BD', 'var(--success)', 'var(--secondary)'];
-
-const CONTENT_TYPES = [
-  { icon: Mail, label: 'Newsletters', color: 'var(--accent)' },
-  { icon: Linkedin, label: 'LinkedIn Posts', color: '#0A66C2' },
-  { icon: Mic, label: 'Podcast Scripts', color: '#7DC4BD' },
-  { icon: Users, label: 'Client Briefings', color: 'var(--secondary)' },
+const MODULES = [
+  {
+    icon: BookOpen,
+    name: 'Define',
+    title: 'The Messaging Bible',
+    color: '#4A9E96',
+    description: 'A structured AI interview extracts your genuine positioning — not marketing fluff. It pushes back on vague answers and challenges generic claims. The output is a six-section strategic document: company narrative, ICP profiles, departmental messaging matrix, brand voice rules, competitive positioning, and off-limits language.',
+    detail: 'Not a form. Not a questionnaire. A conversation designed to extract real positioning from technical founders who have never thought about narrative explicitly.',
+    free: true,
+  },
+  {
+    icon: Radar,
+    name: 'Monitor',
+    title: 'The Radar',
+    color: '#7DC4BD',
+    description: 'Continuous monitoring across trade press, regulatory sources, and LinkedIn. Stories are pre-filtered, relevance-scored against your Messaging Bible, and only the strongest signals surface. Maximum five stories per timeframe — if nothing meets the bar, you get alternative angles instead of weak content.',
+    detail: 'Four-stage pipeline: Ingest → Pre-filter → Relevance score → Angle identification using 17 news values.',
+  },
+  {
+    icon: PenTool,
+    name: 'Draft',
+    title: 'Channel-Specific Content',
+    color: '#3AAF7C',
+    description: 'For each approved signal, three distinct outputs simultaneously: a LinkedIn post in the founder\'s personal voice, an email with a genuine conversation opener, and a complete trade media pitch package with hook, target publication, headline, and attributed senior quote.',
+    detail: 'Same voice, same narrative — different register, different length, different structure. The system learns from every edit.',
+  },
+  {
+    icon: Send,
+    name: 'Distribute',
+    title: 'Zero Friction to Live',
+    color: '#6B7D92',
+    description: 'One-click copy, direct LinkedIn posting via API, email export compatible with Mailchimp and HubSpot, PDF export for trade media pitches and market briefings. Content calendar view showing published, scheduled, and pending items.',
+    detail: 'We don\'t try to be a social media scheduler. The goal is minimum steps between approved and published.',
+  },
+  {
+    icon: Brain,
+    name: 'Learn',
+    title: 'The PMF Feedback Loop',
+    color: '#8B5CF6',
+    description: 'Tracks not just engagement volume but who is engaging — flagging when target accounts interact versus when the audience skews wrong. Monthly intelligence reports identify which narrative pillars are landing and which aren\'t. Quarterly positioning reviews suggest specific Messaging Bible updates backed by data.',
+    detail: 'This is what makes it a growth intelligence platform, not a content tool. Every revolution of the loop makes the next one more accurate.',
+  },
 ];
 
-const LOGOS = [
-  'Insurance Journal',
-  'Reinsurance News',
-  'Artemis',
-  'Insurance Times',
-  'The Insurer',
-  'Commercial Risk',
-];
-
-const STEP_ACCENTS = ['var(--accent)', '#7DC4BD', 'var(--success)'];
+const SOURCES = {
+  'Tier 1': ['Insurance Insider', 'The Insurer', 'React News', 'Post Magazine', 'FCA', 'PRA'],
+  'Tier 2': ['Reinsurance News', 'Global Reinsurance', 'BIBA', 'ABI', 'MGAA', 'EIOPA'],
+};
 
 export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [c, setC] = useState<Record<string, string>>({});
-
-  // Load editable content
-  useEffect(() => {
-    fetch('/api/content')
-      .then(r => r.json())
-      .then(data => setC(data))
-      .catch(() => {});
-  }, []);
-
-  // Helper: get content with inline fallback
-  const t = (key: string, fallback: string) => c[key] || fallback;
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +119,10 @@ export default function LandingPage() {
             </div>
             <span className="text-lg font-bold text-[var(--text-primary)]">Telum</span>
           </div>
+          <div className="hidden sm:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
+            <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">How it works</a>
+            <a href="#pricing" className="hover:text-[var(--text-primary)] transition-colors">Pricing</a>
+          </div>
           <div className="flex items-center gap-3">
             <Link
               href="/login"
@@ -101,7 +134,7 @@ export default function LandingPage() {
               href="/register"
               className="text-sm font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Get started
+              Start free
             </Link>
           </div>
         </div>
@@ -118,60 +151,89 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-[var(--navy-light)] border border-[var(--border)] rounded-full px-4 py-1.5 mb-8">
             <span className="w-2 h-2 bg-[var(--success)] rounded-full animate-pulse" />
             <span className="text-xs text-[var(--text-secondary)] font-medium">
-              {t('hero.badge', 'Built for insurance distribution companies')}
+              Growth intelligence for specialist insurtechs
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-tight max-w-4xl mx-auto mb-6">
-            {t('hero.title', 'Turn insurance news into')}{' '}
+            Build market credibility{' '}
             <span className="bg-gradient-to-r from-[var(--accent)] to-[#7DC4BD] bg-clip-text text-transparent">
-              {t('hero.title_highlight', 'client-ready content')}
+              without a marketing team
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed">
-            {t('hero.subtitle', 'Telum ingests live trade press, generates branded content across four formats, and checks every word for regulatory compliance — so your team publishes in minutes, not days.')}
+            Telum monitors your market, defines your narrative, produces channel-specific content, and learns what&apos;s working &mdash; so insurers, brokers, and MGAs see you consistently saying smart, specific things about their world.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <Link
               href="/register"
-              className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium px-7 py-3 rounded-lg transition-colors text-base"
+              className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium px-7 py-3.5 rounded-lg transition-colors text-base"
             >
-              {t('hero.cta_primary', 'Start free')} <ArrowRight size={18} />
-            </Link>
-            <Link
-              href="#features"
-              className="flex items-center gap-2 bg-[var(--navy-lighter)] border border-[var(--border)] text-[var(--text-primary)] font-medium px-7 py-3 rounded-lg hover:bg-[var(--navy-light)] transition-colors text-base"
-            >
-              {t('hero.cta_secondary', 'See how it works')}
+              Start with your free Messaging Bible <ArrowRight size={18} />
             </Link>
           </div>
 
-          {/* Content type pills */}
-          <div className="flex flex-wrap justify-center gap-3 mt-12">
-            {CONTENT_TYPES.map((ct) => (
-              <div
-                key={ct.label}
-                className="flex items-center gap-2 bg-[var(--navy-light)] border border-[var(--border)] rounded-full px-4 py-2"
-              >
-                <ct.icon size={16} style={{ color: ct.color }} />
-                <span className="text-sm text-[var(--text-secondary)]">{ct.label}</span>
+          <p className="text-sm text-[var(--text-secondary)]/60">
+            No credit card required. Your Messaging Bible is free &mdash; forever.
+          </p>
+        </div>
+      </section>
+
+      {/* Pain point */}
+      <section className="py-20 border-y border-[var(--border)]">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-2xl p-8 sm:p-12">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-1">
+                <Target size={20} className="text-amber-400" />
               </div>
-            ))}
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-2">
+                  The problem you already know
+                </h2>
+                <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
+                  You know your product is good. You can&apos;t translate that into consistent market presence.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 mt-8">
+              {[
+                'Your LinkedIn page is embarrassing. The last post was a product update three months ago.',
+                'You\u2019re losing meetings to competitors who look more credible on paper.',
+                'You hired someone to fix it and the output feels completely disconnected from what you\u2019re trying to achieve commercially.',
+                'Your buyers are sophisticated insurance professionals who can tell the difference between genuine expertise and generic content instantly.',
+              ].map((pain, i) => (
+                <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[var(--navy)]/50">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{pain}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-[var(--border)]">
+              <p className="text-[var(--text-primary)] font-semibold text-center text-base sm:text-lg">
+                You need the right people to see you consistently saying smart, specific, non-obvious things about their market.
+              </p>
+              <p className="text-[var(--text-secondary)] text-center text-sm mt-2">
+                Over time that builds a reputation that opens doors before the sales team even knocks.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Source bar */}
-      <section className="border-y border-[var(--border)] bg-[var(--navy-light)]/50 py-8">
+      <section className="py-10 bg-[var(--navy-light)]/30">
         <div className="max-w-6xl mx-auto px-6">
           <p className="text-center text-xs font-medium text-[var(--text-secondary)] uppercase tracking-widest mb-6">
-            {t('sources.label', 'Aggregating from leading trade press')}
+            Monitoring insurance trade press &amp; regulatory sources
           </p>
-          <div className="flex flex-wrap justify-center gap-8">
-            {LOGOS.map((name) => (
-              <span key={name} className="text-sm text-[var(--text-secondary)]/60 font-medium">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            {[...SOURCES['Tier 1'], ...SOURCES['Tier 2']].map((name) => (
+              <span key={name} className="text-sm text-[var(--text-secondary)]/50 font-medium">
                 {name}
               </span>
             ))}
@@ -179,75 +241,145 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-24">
+      {/* The Five Modules */}
+      <section id="how-it-works" className="py-24">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              {t('features.title', 'Everything you need to publish with confidence')}
+              Five modules. One loop.
             </h2>
-            <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              {t('features.subtitle', 'From news aggregation to compliance-checked delivery — Telum handles the full content pipeline for insurance distribution.')}
+            <p className="text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
+              The system does the work. You make decisions, not tasks. When you open the app, the work is already done.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((i) => {
-              const Icon = FEATURE_ICONS[i - 1];
-              const color = FEATURE_COLORS[i - 1];
+          <div className="space-y-6">
+            {MODULES.map((mod, i) => {
+              const Icon = mod.icon;
               return (
                 <div
-                  key={i}
-                  className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8 hover:border-[color:var(--accent)]/30 transition-colors group"
+                  key={mod.name}
+                  className="bg-[var(--navy-light)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 hover:border-[var(--accent)]/20 transition-colors"
                 >
-                  <div
-                    className="w-11 h-11 rounded-lg flex items-center justify-center mb-5"
-                    style={{ background: `color-mix(in srgb, ${color} 15%, transparent)` }}
-                  >
-                    <Icon size={22} style={{ color }} />
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="flex items-start gap-4 lg:w-2/5">
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span
+                          className="text-3xl font-extrabold opacity-20"
+                          style={{ color: mod.color }}
+                        >
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <div
+                          className="w-11 h-11 rounded-lg flex items-center justify-center"
+                          style={{ background: `${mod.color}15` }}
+                        >
+                          <Icon size={22} style={{ color: mod.color }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                            {mod.name}
+                          </h3>
+                          {mod.free && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20 px-2 py-0.5 rounded-full">
+                              Free
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium text-[var(--accent)]">{mod.title}</p>
+                      </div>
+                    </div>
+                    <div className="lg:w-3/5">
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
+                        {mod.description}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]/70 italic">
+                        {mod.detail}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                    {t(`features.${i}.title`, '')}
-                  </h3>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">
-                    {t(`features.${i}.desc`, '')}
-                  </p>
                 </div>
               );
             })}
           </div>
+
+          {/* Core loop visual */}
+          <div className="mt-16 bg-gradient-to-r from-[var(--accent)]/5 to-[#8B5CF6]/5 border border-[var(--border)] rounded-2xl p-8 sm:p-10">
+            <div className="flex items-center gap-3 mb-6">
+              <RefreshCw size={20} className="text-[var(--accent)]" />
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">The Core Loop</h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              {[
+                'Define narrative',
+                'Monitor market',
+                'Identify angles',
+                'Generate drafts',
+                'Human review',
+                'Distribute',
+                'Track what lands',
+                'Learn & refine',
+                'Update Bible',
+              ].map((step, i, arr) => (
+                <span key={step} className="flex items-center gap-2">
+                  <span className="bg-[var(--navy)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--text-primary)] font-medium text-xs sm:text-sm whitespace-nowrap">
+                    {step}
+                  </span>
+                  {i < arr.length - 1 && (
+                    <ChevronRight size={14} className="text-[var(--text-secondary)]/40 flex-shrink-0" />
+                  )}
+                </span>
+              ))}
+              <span className="flex items-center gap-2">
+                <ChevronRight size={14} className="text-[var(--accent)] flex-shrink-0" />
+                <span className="text-xs text-[var(--accent)] font-medium italic">repeat, better each time</span>
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-secondary)] mt-4">
+              Every revolution makes the next one more accurate, more specific, and more valuable. The product gets better the longer you use it.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* How it works */}
+      {/* Messaging Bible detail */}
       <section className="py-24 bg-[var(--navy-light)]/40">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              {t('steps.title', 'Three steps to compliant content')}
+              Your Messaging Bible is where it starts
             </h2>
-            <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              {t('steps.subtitle', 'No more copy-pasting from trade press. No more compliance back-and-forth.')}
+            <p className="text-[var(--text-secondary)] max-w-2xl mx-auto">
+              Not a form. A structured AI conversation designed to extract genuine positioning from technical founders. It pushes back on vague answers. It challenges generic claims. It produces a professional document you&apos;d share with investors, new hires, or a PR agency.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="text-center">
-                <div
-                  className="text-5xl font-extrabold mb-4 opacity-20"
-                  style={{ color: STEP_ACCENTS[i - 1] }}
-                >
-                  {String(i).padStart(2, '0')}
-                </div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                  {t(`steps.${i}.title`, '')}
-                </h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">
-                  {t(`steps.${i}.desc`, '')}
-                </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: 'Company Narrative', desc: 'Your core thesis — one paragraph, written as you\'d say it at your sharpest and most direct. The north star everything references.' },
+              { title: 'ICP Profiles', desc: 'Specific buyer personas with their language, problems, scepticisms, and success criteria. Referenced in every content generation.' },
+              { title: 'Departmental Matrix', desc: 'How your message adapts for CTO, CUO, CFO, CEO, Head of Distribution. Stops you saying different things to different people.' },
+              { title: 'Brand Voice Rules', desc: 'Not adjectives. Specific writing rules with examples. "Lead with the implication, not the event." "No sentences longer than 25 words."' },
+              { title: 'Competitive Positioning', desc: 'Named competitors, how you differ from each, and the specific claim you can make in a head-to-head conversation.' },
+              { title: 'Off-Limits', desc: 'What you should never say. Common clichés in your segment. Language your competitors overuse that you should actively avoid.' },
+            ].map((section) => (
+              <div key={section.title} className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-5 sm:p-6">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">{section.title}</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{section.desc}</p>
               </div>
             ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm"
+            >
+              Build yours free <ArrowRight size={16} />
+            </Link>
+            <p className="text-xs text-[var(--text-secondary)] mt-3">Takes ~5 minutes. Delivered as a branded PDF.</p>
           </div>
         </div>
       </section>
@@ -257,23 +389,42 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              {t('audience.title', 'Built for insurance distribution')}
+              Built for specialist insurtechs
             </h2>
+            <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
+              10&ndash;100 people. Series A or pre-Series A with commercial traction. Selling to insurers, brokers, MGAs, or Lloyd&apos;s market participants.
+            </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+            {[
+              {
+                badge: 'Primary buyer',
+                title: 'Founder / Head of Commercial',
+                desc: 'You know the product is good. You can\u2019t translate that into consistent market presence. You\u2019re not a marketer and you don\u2019t have time to become one. You need the right people to see you as the smartest company in your segment.',
+              },
+              {
+                badge: 'Operator',
+                title: 'Junior Marketing Hire',
+                desc: 'You\u2019re approving drafts, scheduling content, and reporting back. Telum gives you the strategic foundation and market intelligence you need to produce work that actually connects to commercial goals.',
+              },
+              {
+                badge: 'The outcome',
+                title: 'Market Credibility at Scale',
+                desc: 'The right people \u2014 insurers, brokers, MGAs, capacity providers \u2014 see your company consistently saying smart, specific, non-obvious things. Over time that reputation opens doors before the sales team even knocks.',
+              },
+            ].map((item) => (
               <div
-                key={i}
+                key={item.title}
                 className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8"
               >
                 <span className="inline-block text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full px-3 py-1 mb-4">
-                  {t(`audience.${i}.badge`, '')}
+                  {item.badge}
                 </span>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                  {t(`audience.${i}.title`, '')}
+                  {item.title}
                 </h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">
-                  {t(`audience.${i}.desc`, '')}
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                  {item.desc}
                 </p>
               </div>
             ))}
@@ -281,41 +432,158 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 bg-[var(--navy-light)]/40">
+      {/* Content formats */}
+      <section className="py-20 bg-[var(--navy-light)]/40">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              {t('pricing.title', 'Simple, transparent pricing')}
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-3">
+              Three formats, simultaneously
             </h2>
-            <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              {t('pricing.subtitle', "Start with a 14-day free trial. Every plan includes your Messaging Bible and channel-specific content generation.")}
+            <p className="text-[var(--text-secondary)] text-sm max-w-xl mx-auto">
+              Same voice, same narrative &mdash; different register, different length, different structure.
             </p>
           </div>
-
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
+                icon: Linkedin,
+                color: '#0A66C2',
+                title: 'LinkedIn Post',
+                desc: 'Written in the founder\u2019s personal voice. First person. Opinion-led. Opens with the contrarian angle, not the news summary. 150\u2013200 words. No hashtags. No promotional language.',
+              },
+              {
+                icon: Mail,
+                color: 'var(--accent)',
+                title: 'Email',
+                desc: 'More considered, more detailed. Includes a natural reason to reply \u2014 not "book a demo" but a genuine conversation opener tied to the specific story. Works as standalone outreach or newsletter section.',
+              },
+              {
+                icon: Megaphone,
+                color: '#F97316',
+                title: 'Trade Media Pitch',
+                desc: 'A complete pitch package: hook, target publication, suggested headline, story angle, attributed senior quote, supporting context. A PR agency can use it directly without a briefing call.',
+              },
+            ].map((format) => (
+              <div key={format.title} className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-6">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                  style={{ background: `color-mix(in srgb, ${format.color} 15%, transparent)` }}
+                >
+                  <format.icon size={20} style={{ color: format.color }} />
+                </div>
+                <h3 className="text-base font-semibold text-[var(--text-primary)] mb-2">{format.title}</h3>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{format.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Briefing builder callout */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-gradient-to-br from-[var(--accent)]/10 to-[#8B5CF6]/10 border border-[var(--accent)]/20 rounded-2xl p-8 sm:p-10">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/20 flex items-center justify-center flex-shrink-0">
+                <FileText size={24} className="text-[var(--accent)]" />
+              </div>
+              <div>
+                <span className="text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full px-3 py-1 mb-3 inline-block">
+                  Intelligence tier
+                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-3">
+                  The Briefing Builder
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+                  Generate market briefing documents ahead of investor conversations, partnership discussions, enterprise sales pitches, or conference appearances. Input who you&apos;re meeting and the agenda &mdash; get a 3&ndash;4 page branded PDF with executive summary, market developments, competitive landscape, and outlook.
+                </p>
+                <p className="text-xs text-[var(--text-secondary)]/70 italic">
+                  The highest-value single output in the platform &mdash; the feature most likely to generate a &ldquo;this paid for itself&rdquo; moment within the first month.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What this is not */}
+      <section className="py-16 bg-[var(--navy-light)]/40">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center mb-8">
+            What this is not
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { not: 'A social media scheduler', alt: 'Buffer & Hootsuite do that' },
+              { not: 'A generic AI writing tool', alt: 'ChatGPT & Jasper do that' },
+              { not: 'A PR platform', alt: 'Cision & Muckrack do that' },
+              { not: 'A market data terminal', alt: 'Insurance Insider does that' },
+              { not: 'A CRM or sales tool', alt: 'HubSpot & Salesforce do that' },
+              { not: 'Content without intelligence', alt: 'We sit in the gap between market intelligence and commercial execution' },
+            ].map((item) => (
+              <div key={item.not} className="flex items-start gap-3 p-4 bg-[var(--navy)] rounded-xl border border-[var(--border)]">
+                <span className="text-red-400 text-sm mt-0.5 flex-shrink-0">&times;</span>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{item.not}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{item.alt}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-24">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
+              Start with your free Messaging Bible. The paid tiers unlock continuous monitoring, content generation, and intelligence.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                name: 'Free',
+                price: 0,
+                period: 'forever',
+                desc: 'Your Messaging Bible — the foundation',
+                features: [
+                  'Full onboarding interview',
+                  'Complete Messaging Bible',
+                  'Departmental messaging matrix',
+                  'One live signal demonstration',
+                  'Branded PDF export',
+                ],
+                accent: 'var(--text-secondary)',
+                popular: false,
+                cta: 'Get started free',
+              },
+              {
                 name: 'Starter',
-                slug: 'starter',
                 price: 500,
-                yearly: 4800,
+                period: '/month',
+                desc: 'For founders managing their own LinkedIn',
                 features: [
                   'Messaging Bible',
                   'Weekly monitoring',
                   '3 LinkedIn drafts per week',
                   'Basic engagement tracking',
                   'Email support',
-                  '14-day free trial',
                 ],
                 accent: 'var(--accent)',
                 popular: false,
+                cta: 'Start 14-day trial',
               },
               {
                 name: 'Growth',
-                slug: 'professional',
                 price: 1200,
-                yearly: 11520,
+                period: '/month',
+                desc: 'For founder + junior marketing hire',
                 features: [
                   'Everything in Starter',
                   'Daily monitoring',
@@ -327,12 +595,13 @@ export default function LandingPage() {
                 ],
                 accent: 'var(--accent)',
                 popular: true,
+                cta: 'Start 14-day trial',
               },
               {
                 name: 'Intelligence',
-                slug: 'enterprise',
                 price: 2000,
-                yearly: 19200,
+                period: '/month',
+                desc: 'For the full commercial team',
                 features: [
                   'Everything in Growth',
                   'Competitor monitoring',
@@ -340,15 +609,17 @@ export default function LandingPage() {
                   'Quarterly positioning review',
                   'Briefing builder',
                   'Trade media pitches',
+                  'Departmental matrix updates',
                   'Unlimited users',
                 ],
                 accent: 'var(--success)',
                 popular: false,
+                cta: 'Start 14-day trial',
               },
             ].map((plan) => (
               <div
                 key={plan.name}
-                className={`relative bg-[var(--navy-light)] border rounded-xl p-8 flex flex-col ${
+                className={`relative bg-[var(--navy-light)] border rounded-xl p-6 flex flex-col ${
                   plan.popular
                     ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30'
                     : 'border-[var(--border)]'
@@ -361,44 +632,50 @@ export default function LandingPage() {
                     </span>
                   </div>
                 )}
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                <div className="mb-5">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
                     {plan.name}
                   </h3>
-                  <p className="text-sm text-[var(--text-secondary)] mb-4">
-                    {t(`pricing.${plan.slug}.desc`, '')}
+                  <p className="text-xs text-[var(--text-secondary)] mb-3">
+                    {plan.desc}
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-[var(--text-primary)]">
-                      &pound;{plan.price}
-                    </span>
-                    <span className="text-[var(--text-secondary)] text-sm">/month</span>
+                    {plan.price === 0 ? (
+                      <span className="text-3xl font-extrabold text-[var(--text-primary)]">&pound;0</span>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-extrabold text-[var(--text-primary)]">
+                          &pound;{plan.price.toLocaleString()}
+                        </span>
+                        <span className="text-[var(--text-secondary)] text-sm">{plan.period}</span>
+                      </>
+                    )}
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-1">
-                    or &pound;{plan.yearly}/year (save {Math.round((1 - plan.yearly / (plan.price * 12)) * 100)}%)
-                  </p>
+                  {plan.price === 0 && (
+                    <p className="text-xs text-[var(--success)] mt-1 font-medium">{plan.period}</p>
+                  )}
                 </div>
-                <ul className="space-y-3 mb-8 flex-1">
+                <ul className="space-y-2.5 mb-6 flex-1">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5">
+                    <li key={f} className="flex items-start gap-2">
                       <Check
-                        size={16}
+                        size={14}
                         className="mt-0.5 shrink-0"
                         style={{ color: plan.accent }}
                       />
-                      <span className="text-sm text-[var(--text-secondary)]">{f}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">{f}</span>
                     </li>
                   ))}
                 </ul>
                 <Link
                   href="/register"
-                  className={`text-center font-medium px-6 py-3 rounded-lg transition-colors text-sm ${
+                  className={`text-center font-medium px-5 py-2.5 rounded-lg transition-colors text-sm ${
                     plan.popular
                       ? 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white'
                       : 'bg-[var(--navy-lighter)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--navy-light)]'
                   }`}
                 >
-                  Get started
+                  {plan.cta}
                 </Link>
               </div>
             ))}
@@ -406,46 +683,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Early access / waitlist */}
+      {/* Final CTA */}
       <section className="py-24 bg-[var(--navy-light)]/40">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-            {t('cta.title', 'Get early access')}
+            Every week without this is a week your competitors are the ones saying something
           </h2>
-          <p className="text-[var(--text-secondary)] mb-8">
-            {t('cta.subtitle', 'Join the waitlist and be the first to automate your insurance content pipeline.')}
+          <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
+            Start with your free Messaging Bible. See a real piece of content generated from live market intelligence, in your voice, before you decide on a plan.
           </p>
 
-          {submitted ? (
-            <div className="flex items-center justify-center gap-3 bg-[var(--success)]/10 border border-[var(--success)]/20 rounded-xl px-6 py-4">
-              <CheckCircle2 size={20} className="text-[var(--success)]" />
-              <span className="text-[var(--success)] font-medium">
-                {t('cta.success', "You're on the list! We'll be in touch soon.")}
-              </span>
-            </div>
-          ) : (
-            <form onSubmit={handleWaitlist} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="you@yourcompany.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1 bg-[var(--navy)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm whitespace-nowrap"
-              >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {t('cta.button', 'Join waitlist')}
-              </button>
-            </form>
-          )}
-          {error && (
-            <p className="text-sm text-[var(--error)] mt-3">{error}</p>
-          )}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/register"
+              className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium px-7 py-3.5 rounded-lg transition-colors text-base"
+            >
+              Start free <ArrowRight size={18} />
+            </Link>
+          </div>
+
+          <p className="text-xs text-[var(--text-secondary)]/60 mt-4">
+            No credit card. No commitment. Your Messaging Bible is yours to keep.
+          </p>
         </div>
       </section>
 
@@ -459,7 +718,7 @@ export default function LandingPage() {
             <span className="text-sm font-semibold text-[var(--text-primary)]">Telum</span>
           </div>
           <p className="text-xs text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} Telum. {t('footer.tagline', 'AI-powered content for insurance distribution.')}
+            &copy; {new Date().getFullYear()} Telum. Growth intelligence for specialist insurtechs.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
@@ -470,9 +729,6 @@ export default function LandingPage() {
             </Link>
             <Link href="/login" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               Sign in
-            </Link>
-            <Link href="/register" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-              Get started
             </Link>
           </div>
         </div>
