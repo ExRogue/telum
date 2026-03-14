@@ -578,6 +578,7 @@ export default function MessagingBiblePage() {
             loadedExistingBible.current = true;
             setGeneratedDoc(data.bible.full_document);
             setStep(4);
+            setMode('form');
           }
         }
       })
