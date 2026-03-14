@@ -270,6 +270,17 @@ export async function initDb() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS site_content (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT '',
+      section TEXT NOT NULL DEFAULT 'general',
+      label TEXT NOT NULL DEFAULT '',
+      field_type TEXT NOT NULL DEFAULT 'text',
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   // Migrations: add columns if missing
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false`;
   await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT ''`;

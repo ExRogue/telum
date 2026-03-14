@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Zap,
@@ -16,32 +16,8 @@ import {
   Check,
 } from 'lucide-react';
 
-const FEATURES = [
-  {
-    icon: Newspaper,
-    title: 'Live News Ingestion',
-    desc: 'Aggregates from 6 insurance trade press sources in real-time — Insurance Journal, Reinsurance News, Artemis, Insurance Times, The Insurer, and Commercial Risk.',
-    color: 'var(--accent)',
-  },
-  {
-    icon: Zap,
-    title: 'AI Content Generation',
-    desc: 'One click transforms raw articles into polished newsletters, LinkedIn posts, podcast scripts, and client briefings in your brand voice.',
-    color: '#7DC4BD',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Compliance Engine',
-    desc: 'Every piece of content is scanned against FCA, State DOI, GDPR, and FTC frameworks before it reaches your audience.',
-    color: 'var(--success)',
-  },
-  {
-    icon: FileText,
-    title: 'Multi-Format Output',
-    desc: 'Publish across every channel your clients use — from formal briefings to conversational social posts, all from the same source material.',
-    color: 'var(--secondary)',
-  },
-];
+const FEATURE_ICONS = [Newspaper, Zap, ShieldCheck, FileText];
+const FEATURE_COLORS = ['var(--accent)', '#7DC4BD', 'var(--success)', 'var(--secondary)'];
 
 const CONTENT_TYPES = [
   { icon: Mail, label: 'Newsletters', color: 'var(--accent)' },
@@ -59,11 +35,25 @@ const LOGOS = [
   'Commercial Risk',
 ];
 
+const STEP_ACCENTS = ['var(--accent)', '#7DC4BD', 'var(--success)'];
+
 export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [c, setC] = useState<Record<string, string>>({});
+
+  // Load editable content
+  useEffect(() => {
+    fetch('/api/content')
+      .then(r => r.json())
+      .then(data => setC(data))
+      .catch(() => {});
+  }, []);
+
+  // Helper: get content with inline fallback
+  const t = (key: string, fallback: string) => c[key] || fallback;
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,21 +118,19 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-[var(--navy-light)] border border-[var(--border)] rounded-full px-4 py-1.5 mb-8">
             <span className="w-2 h-2 bg-[var(--success)] rounded-full animate-pulse" />
             <span className="text-xs text-[var(--text-secondary)] font-medium">
-              Built for insurance distribution companies
+              {t('hero.badge', 'Built for insurance distribution companies')}
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] leading-tight max-w-4xl mx-auto mb-6">
-            Turn insurance news into{' '}
+            {t('hero.title', 'Turn insurance news into')}{' '}
             <span className="bg-gradient-to-r from-[var(--accent)] to-[#7DC4BD] bg-clip-text text-transparent">
-              client-ready content
+              {t('hero.title_highlight', 'client-ready content')}
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed">
-            Telum ingests live trade press, generates branded content across four formats,
-            and checks every word for regulatory compliance — so your team publishes in
-            minutes, not days.
+            {t('hero.subtitle', 'Telum ingests live trade press, generates branded content across four formats, and checks every word for regulatory compliance — so your team publishes in minutes, not days.')}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
@@ -150,13 +138,13 @@ export default function LandingPage() {
               href="/register"
               className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium px-7 py-3 rounded-lg transition-colors text-base"
             >
-              Start free <ArrowRight size={18} />
+              {t('hero.cta_primary', 'Start free')} <ArrowRight size={18} />
             </Link>
             <Link
               href="#features"
               className="flex items-center gap-2 bg-[var(--navy-lighter)] border border-[var(--border)] text-[var(--text-primary)] font-medium px-7 py-3 rounded-lg hover:bg-[var(--navy-light)] transition-colors text-base"
             >
-              See how it works
+              {t('hero.cta_secondary', 'See how it works')}
             </Link>
           </div>
 
@@ -179,7 +167,7 @@ export default function LandingPage() {
       <section className="border-y border-[var(--border)] bg-[var(--navy-light)]/50 py-8">
         <div className="max-w-6xl mx-auto px-6">
           <p className="text-center text-xs font-medium text-[var(--text-secondary)] uppercase tracking-widest mb-6">
-            Aggregating from leading trade press
+            {t('sources.label', 'Aggregating from leading trade press')}
           </p>
           <div className="flex flex-wrap justify-center gap-8">
             {LOGOS.map((name) => (
@@ -196,32 +184,37 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              Everything you need to publish with confidence
+              {t('features.title', 'Everything you need to publish with confidence')}
             </h2>
             <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              From news aggregation to compliance-checked delivery — Telum handles
-              the full content pipeline for insurance distribution.
+              {t('features.subtitle', 'From news aggregation to compliance-checked delivery — Telum handles the full content pipeline for insurance distribution.')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8 hover:border-[color:var(--accent)]/30 transition-colors group"
-              >
+            {[1, 2, 3, 4].map((i) => {
+              const Icon = FEATURE_ICONS[i - 1];
+              const color = FEATURE_COLORS[i - 1];
+              return (
                 <div
-                  className="w-11 h-11 rounded-lg flex items-center justify-center mb-5"
-                  style={{ background: `color-mix(in srgb, ${f.color} 15%, transparent)` }}
+                  key={i}
+                  className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8 hover:border-[color:var(--accent)]/30 transition-colors group"
                 >
-                  <f.icon size={22} style={{ color: f.color }} />
+                  <div
+                    className="w-11 h-11 rounded-lg flex items-center justify-center mb-5"
+                    style={{ background: `color-mix(in srgb, ${color} 15%, transparent)` }}
+                  >
+                    <Icon size={22} style={{ color }} />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
+                    {t(`features.${i}.title`, '')}
+                  </h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed">
+                    {t(`features.${i}.desc`, '')}
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                  {f.title}
-                </h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -231,45 +224,28 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              Three steps to compliant content
+              {t('steps.title', 'Three steps to compliant content')}
             </h2>
             <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              No more copy-pasting from trade press. No more compliance back-and-forth.
+              {t('steps.subtitle', 'No more copy-pasting from trade press. No more compliance back-and-forth.')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: '01',
-                title: 'Select Articles',
-                desc: 'Browse your live news feed from 6 insurance trade press sources. Pick the stories that matter to your clients.',
-                accent: 'var(--accent)',
-              },
-              {
-                step: '02',
-                title: 'Choose Formats',
-                desc: 'Select which content types to generate — newsletters, LinkedIn posts, podcast scripts, or client briefings.',
-                accent: '#7DC4BD',
-              },
-              {
-                step: '03',
-                title: 'Publish with Confidence',
-                desc: 'Every output is compliance-checked against FCA, State DOI, GDPR, and FTC rules before you hit send.',
-                accent: 'var(--success)',
-              },
-            ].map((s) => (
-              <div key={s.step} className="text-center">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-center">
                 <div
                   className="text-5xl font-extrabold mb-4 opacity-20"
-                  style={{ color: s.accent }}
+                  style={{ color: STEP_ACCENTS[i - 1] }}
                 >
-                  {s.step}
+                  {String(i).padStart(2, '0')}
                 </div>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                  {s.title}
+                  {t(`steps.${i}.title`, '')}
                 </h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">{s.desc}</p>
+                <p className="text-[var(--text-secondary)] leading-relaxed">
+                  {t(`steps.${i}.desc`, '')}
+                </p>
               </div>
             ))}
           </div>
@@ -281,38 +257,24 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              Built for insurance distribution
+              {t('audience.title', 'Built for insurance distribution')}
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'MGAs',
-                desc: 'Generate thought leadership that positions your binding authority. Stay ahead of market trends with automated content from the specialist press.',
-                badge: 'Managing General Agents',
-              },
-              {
-                title: 'Insurtechs',
-                desc: 'Keep your digital-first audience engaged with rapid-fire content. Turn market developments into social proof and product narratives.',
-                badge: 'Insurance Technology',
-              },
-              {
-                title: 'Brokers',
-                desc: 'Deliver commercial intelligence your clients value. Transform complex industry news into clear, actionable briefings.',
-                badge: 'Insurance Brokers',
-              },
-            ].map((c) => (
+            {[1, 2, 3].map((i) => (
               <div
-                key={c.title}
+                key={i}
                 className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-8"
               >
                 <span className="inline-block text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full px-3 py-1 mb-4">
-                  {c.badge}
+                  {t(`audience.${i}.badge`, '')}
                 </span>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
-                  {c.title}
+                  {t(`audience.${i}.title`, '')}
                 </h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">{c.desc}</p>
+                <p className="text-[var(--text-secondary)] leading-relaxed">
+                  {t(`audience.${i}.desc`, '')}
+                </p>
               </div>
             ))}
           </div>
@@ -324,10 +286,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              Simple, transparent pricing
+              {t('pricing.title', 'Simple, transparent pricing')}
             </h2>
             <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
-              Start free, upgrade when you&apos;re ready. Every plan includes compliance checking and multi-format output.
+              {t('pricing.subtitle', "Start free, upgrade when you're ready. Every plan includes compliance checking and multi-format output.")}
             </p>
           </div>
 
@@ -335,9 +297,9 @@ export default function LandingPage() {
             {[
               {
                 name: 'Starter',
+                slug: 'starter',
                 price: 49,
                 yearly: 470,
-                desc: 'For solo brokers and small teams getting started with automated content.',
                 features: [
                   '50 articles per month',
                   '10 content pieces per month',
@@ -351,9 +313,9 @@ export default function LandingPage() {
               },
               {
                 name: 'Professional',
+                slug: 'professional',
                 price: 149,
                 yearly: 1430,
-                desc: 'For growing teams that need more volume and advanced features.',
                 features: [
                   '200 articles per month',
                   '50 content pieces per month',
@@ -369,9 +331,9 @@ export default function LandingPage() {
               },
               {
                 name: 'Enterprise',
+                slug: 'enterprise',
                 price: 399,
                 yearly: 3830,
-                desc: 'For large organisations with unlimited needs and dedicated support.',
                 features: [
                   'Unlimited articles',
                   'Unlimited content pieces',
@@ -406,15 +368,17 @@ export default function LandingPage() {
                   <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
                     {plan.name}
                   </h3>
-                  <p className="text-sm text-[var(--text-secondary)] mb-4">{plan.desc}</p>
+                  <p className="text-sm text-[var(--text-secondary)] mb-4">
+                    {t(`pricing.${plan.slug}.desc`, '')}
+                  </p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold text-[var(--text-primary)]">
-                      £{plan.price}
+                      &pound;{plan.price}
                     </span>
                     <span className="text-[var(--text-secondary)] text-sm">/month</span>
                   </div>
                   <p className="text-xs text-[var(--text-secondary)] mt-1">
-                    or £{plan.yearly}/year (save {Math.round((1 - plan.yearly / (plan.price * 12)) * 100)}%)
+                    or &pound;{plan.yearly}/year (save {Math.round((1 - plan.yearly / (plan.price * 12)) * 100)}%)
                   </p>
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
@@ -449,17 +413,17 @@ export default function LandingPage() {
       <section className="py-24 bg-[var(--navy-light)]/40">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-            Get early access
+            {t('cta.title', 'Get early access')}
           </h2>
           <p className="text-[var(--text-secondary)] mb-8">
-            Join the waitlist and be the first to automate your insurance content pipeline.
+            {t('cta.subtitle', 'Join the waitlist and be the first to automate your insurance content pipeline.')}
           </p>
 
           {submitted ? (
             <div className="flex items-center justify-center gap-3 bg-[var(--success)]/10 border border-[var(--success)]/20 rounded-xl px-6 py-4">
               <CheckCircle2 size={20} className="text-[var(--success)]" />
               <span className="text-[var(--success)] font-medium">
-                You&apos;re on the list! We&apos;ll be in touch soon.
+                {t('cta.success', "You're on the list! We'll be in touch soon.")}
               </span>
             </div>
           ) : (
@@ -478,7 +442,7 @@ export default function LandingPage() {
                 className="flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm whitespace-nowrap"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-                Join waitlist
+                {t('cta.button', 'Join waitlist')}
               </button>
             </form>
           )}
@@ -498,7 +462,7 @@ export default function LandingPage() {
             <span className="text-sm font-semibold text-[var(--text-primary)]">Telum</span>
           </div>
           <p className="text-xs text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} Telum. AI-powered content for insurance distribution.
+            &copy; {new Date().getFullYear()} Telum. {t('footer.tagline', 'AI-powered content for insurance distribution.')}
           </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">

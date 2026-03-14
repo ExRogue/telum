@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { Users, CreditCard, FileText, Newspaper, AlertCircle, Shield, ShieldOff, Ban, CheckCircle, Search, X } from 'lucide-react';
+import Link from 'next/link';
+import { Users, CreditCard, FileText, Newspaper, AlertCircle, Shield, ShieldOff, Ban, CheckCircle, Search, X, Type } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
@@ -247,6 +248,20 @@ export default function AdminPage() {
             <Newspaper size={16} className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--purple)]" />
           </div>
           <p className="text-lg sm:text-3xl font-bold text-[var(--text-primary)]">{stats?.total_articles ?? '—'}</p>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold text-[var(--text-primary)] mb-3">Quick Actions</h3>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/content"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/20 transition-colors text-sm font-medium"
+          >
+            <Type size={16} />
+            Edit Site Content
+          </Link>
         </div>
       </div>
 
