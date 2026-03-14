@@ -33,6 +33,7 @@ import SimpleMarkdown from '@/components/SimpleMarkdown';
 import ContentPreviewModal from '@/components/ContentPreviewModal';
 import ExportPdfButton from '@/components/ExportPdfButton';
 import CalibrationBadge from '@/components/CalibrationBadge';
+import { MessagingBibleNudge } from '@/components/OnboardingChecklist';
 
 interface ContentItem {
   id: string;
@@ -490,6 +491,7 @@ function ContentPageInner() {
   // --- List view ---
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 sm:p-0">
+      <MessagingBibleNudge />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

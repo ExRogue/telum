@@ -17,6 +17,8 @@ const parser = new Parser({
 const INSURANCE_FEEDS = [
   // Tier 1 — UK specialty & regulatory
   { url: 'https://www.theinsurer.com/feed/', source: 'The Insurer', category: 'specialty' },
+  { url: 'https://www.insuranceinsider.com/feed/', source: 'Insurance Insider', category: 'specialty' },
+  { url: 'https://www.intelligentinsurer.com/feed/', source: 'Intelligent Insurer', category: 'specialty' },
   { url: 'https://www.insurancetimes.co.uk/rss', source: 'Insurance Times', category: 'uk_market' },
   { url: 'https://www.postonline.co.uk/rss', source: 'Post Magazine', category: 'uk_market' },
   { url: 'https://www.fca.org.uk/news/rss.xml', source: 'FCA', category: 'regulation' },
@@ -24,10 +26,11 @@ const INSURANCE_FEEDS = [
   { url: 'https://www.reinsurancene.ws/feed/', source: 'Reinsurance News', category: 'reinsurance' },
   { url: 'https://www.globalreinsurance.com/rss', source: 'Global Reinsurance', category: 'reinsurance' },
   { url: 'https://www.abi.org.uk/news/rss/', source: 'ABI', category: 'uk_market' },
-  // Tier 3 — General / international
+  // Tier 3 — General / international / podcast
   { url: 'https://www.insurancejournal.com/feed/', source: 'Insurance Journal', category: 'general' },
   { url: 'https://www.artemis.bm/feed/', source: 'Artemis', category: 'ils' },
   { url: 'https://www.commercialriskonline.com/feed/', source: 'Commercial Risk', category: 'commercial' },
+  { url: 'https://feeds.buzzsprout.com/2063104.rss', source: 'The Voice of Insurance', category: 'podcast' },
 ];
 
 export interface NewsArticle {

@@ -31,6 +31,7 @@ import {
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { MessagingBibleNudge } from '@/components/OnboardingChecklist';
 
 interface NewsArticle {
   id: string;
@@ -436,6 +437,7 @@ export default function NewsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      <MessagingBibleNudge />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Check, Circle, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, X, Sparkles, BookOpen } from 'lucide-react';
 
 interface Step {
   id: string;
@@ -9,6 +9,8 @@ interface Step {
   href: string;
   complete: boolean;
 }
+
+const PRIORITY_STEPS = ['company', 'bible'];
 
 export default function OnboardingChecklist() {
   const [steps, setSteps] = useState<Step[]>([]);
@@ -45,6 +47,8 @@ export default function OnboardingChecklist() {
   if (completedCount >= totalSteps) return null;
 
   const progress = Math.round((completedCount / totalSteps) * 100);
+  const bibleComplete = steps.find(s => s.id === 'bible')?.complete;
+  const companyComplete = steps.find(s => s.id === 'company')?.complete;
 
   return (
     <div style={{
@@ -118,55 +122,158 @@ export default function OnboardingChecklist() {
         }} />
       </div>
 
-      {/* Steps */}
+      {/* Priority callout — nudge to complete company + bible first */}
+      {(!companyComplete || !bibleComplete) && (
+        <div style={{
+          background: 'rgba(74,158,150,0.1)',
+          border: '1px solid rgba(74,158,150,0.2)',
+          borderRadius: '8px',
+          padding: '12px 14px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '10px',
+        }}>
+          <BookOpen size={16} style={{ color: 'var(--accent)', marginTop: '2px', flexShrink: 0 }} />
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+            {!companyComplete
+              ? 'Start by setting up your company — everything else builds on this.'
+              : 'Your Messaging Bible is the foundation of everything Monitus does. Complete it and watch the platform come alive.'
+            }
+          </p>
+        </div>
+      )}
+
+      {/* Steps — numbered */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {steps.map((step) => (
-          <Link
-            key={step.id}
-            href={step.href}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '8px 10px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              transition: 'background 0.15s',
-              background: step.complete ? 'transparent' : 'rgba(74,158,150,0.05)',
-            }}
-            onMouseEnter={(e) => { if (!step.complete) e.currentTarget.style.background = 'rgba(74,158,150,0.1)'; }}
-            onMouseLeave={(e) => { if (!step.complete) e.currentTarget.style.background = 'rgba(74,158,150,0.05)'; }}
-          >
-            {step.complete ? (
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                background: 'var(--success, #22c55e)',
+        {steps.map((step, index) => {
+          const isPriority = PRIORITY_STEPS.includes(step.id);
+          return (
+            <Link
+              key={step.id}
+              href={step.href}
+              style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
+                gap: '10px',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                transition: 'background 0.15s',
+                background: step.complete ? 'transparent' : isPriority ? 'rgba(74,158,150,0.08)' : 'rgba(74,158,150,0.03)',
+              }}
+              onMouseEnter={(e) => { if (!step.complete) e.currentTarget.style.background = 'rgba(74,158,150,0.12)'; }}
+              onMouseLeave={(e) => { if (!step.complete) e.currentTarget.style.background = step.complete ? 'transparent' : isPriority ? 'rgba(74,158,150,0.08)' : 'rgba(74,158,150,0.03)'; }}
+            >
+              {step.complete ? (
+                <div style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'var(--success, #22c55e)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <Check size={12} style={{ color: '#fff' }} />
+                </div>
+              ) : (
+                <div style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  border: `2px solid ${isPriority ? 'var(--accent)' : 'var(--border)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: isPriority ? 'var(--accent)' : 'var(--text-secondary)',
+                }}>
+                  {index + 1}
+                </div>
+              )}
+              <span style={{
+                fontSize: '13px',
+                color: step.complete ? 'var(--text-secondary)' : 'var(--text-primary)',
+                textDecoration: step.complete ? 'line-through' : 'none',
+                fontWeight: isPriority && !step.complete ? 600 : 400,
+                flex: 1,
               }}>
-                <Check size={12} style={{ color: '#fff' }} />
-              </div>
-            ) : (
-              <Circle size={20} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-            )}
-            <span style={{
-              fontSize: '13px',
-              color: step.complete ? 'var(--text-secondary)' : 'var(--text-primary)',
-              textDecoration: step.complete ? 'line-through' : 'none',
-              flex: 1,
-            }}>
-              {step.label}
-            </span>
-            {!step.complete && (
-              <ChevronRight size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-            )}
-          </Link>
-        ))}
+                {step.label}
+              </span>
+              {!step.complete && (
+                <ChevronRight size={14} style={{ color: isPriority ? 'var(--accent)' : 'var(--text-secondary)', flexShrink: 0 }} />
+              )}
+            </Link>
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+/**
+ * Compact nudge banner for other dashboard sections.
+ * Shows when the user hasn't completed their Messaging Bible yet.
+ */
+export function MessagingBibleNudge() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/onboarding')
+      .then(r => r.json())
+      .then(data => {
+        if (data.dismissed || !data.steps) return;
+        const bibleStep = data.steps.find((s: Step) => s.id === 'bible');
+        if (bibleStep && !bibleStep.complete) setShow(true);
+      })
+      .catch(() => {});
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <Link
+      href="/messaging-bible"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        background: 'linear-gradient(135deg, rgba(74,158,150,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+        border: '1px solid rgba(74,158,150,0.2)',
+        borderRadius: '10px',
+        padding: '14px 18px',
+        marginBottom: '20px',
+        textDecoration: 'none',
+        transition: 'border-color 0.15s',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(74,158,150,0.2)'}
+    >
+      <div style={{
+        width: '36px',
+        height: '36px',
+        borderRadius: '8px',
+        background: 'rgba(74,158,150,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <BookOpen size={18} style={{ color: 'var(--accent)' }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+          Complete your Messaging Bible first
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+          Everything here works better once Monitus understands your positioning. Takes about 5 minutes.
+        </p>
+      </div>
+      <ChevronRight size={16} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+    </Link>
   );
 }

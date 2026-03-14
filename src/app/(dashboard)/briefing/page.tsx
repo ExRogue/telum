@@ -25,6 +25,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import SimpleMarkdown from '@/components/SimpleMarkdown';
 import ExportPdfButton from '@/components/ExportPdfButton';
+import { MessagingBibleNudge } from '@/components/OnboardingChecklist';
 
 interface NewsArticle {
   id: string;
@@ -270,6 +271,7 @@ export default function BriefingPage() {
 
   return (
     <div className="space-y-6">
+      <MessagingBibleNudge />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
