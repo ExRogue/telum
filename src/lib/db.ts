@@ -388,6 +388,7 @@ export async function initDb() {
     // Column may already exist
   }
 
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false`;
   await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT ''`;
   await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#14B8A6'`;

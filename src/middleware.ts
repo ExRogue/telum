@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   '/api/auth/logout',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/google',
   '/api/billing/plans',
   '/api/waitlist',
   '/api/webhooks/stripe',
@@ -71,7 +72,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   );
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com; frame-src https://js.stripe.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://js.stripe.com https://accounts.google.com;"
   );
   return response;
 }

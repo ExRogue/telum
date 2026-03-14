@@ -67,6 +67,10 @@ export async function login(email: string, password: string): Promise<AuthResult
     return { success: false, error: 'Invalid email or password' };
   }
 
+  if (row.password_hash === '__google_oauth__') {
+    return { success: false, error: 'This account uses Google sign-in. Please click "Continue with Google" above.' };
+  }
+
   const valid = await bcryptCompare(password, row.password_hash);
   if (!valid) {
     return { success: false, error: 'Invalid email or password' };
@@ -104,6 +108,38 @@ export async function getCurrentUser(): Promise<User | null> {
   } catch {
     return null;
   }
+}
+
+export async function googleLogin(googleId: string, email: string, name: string): Promise<AuthResult> {
+  await getDb();
+
+  // Check if user exists by google_id
+  let result = await sql`SELECT * FROM users WHERE google_id = ${googleId} AND disabled IS NOT TRUE`;
+  let row = result.rows[0];
+
+  if (!row) {
+    // Check if email already exists (link accounts)
+    result = await sql`SELECT * FROM users WHERE email = ${email} AND disabled IS NOT TRUE`;
+    row = result.rows[0];
+
+    if (row) {
+      // Link Google ID to existing account
+      await sql`UPDATE users SET google_id = ${googleId}, email_verified = true, updated_at = NOW() WHERE id = ${row.id}`;
+    } else {
+      // Create new user (no password needed for Google-only users)
+      const id = uuidv4();
+      await sql`
+        INSERT INTO users (id, email, password_hash, name, role, google_id, email_verified)
+        VALUES (${id}, ${email}, ${'__google_oauth__'}, ${name}, ${'user'}, ${googleId}, true)
+      `;
+      row = { id, email, name, role: 'user', created_at: new Date().toISOString() };
+    }
+  }
+
+  const user: User = { id: row.id, email: row.email, name: row.name, role: row.role || 'user', created_at: row.created_at };
+  const token = jwtSign({ userId: row.id, email: row.email }, getSecret(), { expiresIn: TOKEN_EXPIRY });
+
+  return { success: true, user, token };
 }
 
 export async function isAdmin(userId: string): Promise<boolean> {
