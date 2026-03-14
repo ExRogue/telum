@@ -1,265 +1,179 @@
-// Email integration stub - ready for integration with SendGrid, AWS SES, or Resend
-// For now, all functions log to console for development purposes
+import { Resend } from 'resend';
+import { sql } from '@vercel/postgres';
 
-export interface EmailData {
-  to: string;
-  subject: string;
-  body: string;
-  html?: string;
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Telum <noreply@telum.io>';
+
+async function send(to: string, subject: string, html: string): Promise<void> {
+  if (!resend) {
+    console.log('[EMAIL DEV] Would send to:', to, 'Subject:', subject);
+    return;
+  }
+  await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
 }
 
-/**
- * Send a generic email
- * @param to Recipient email address
- * @param subject Email subject
- * @param body Plain text email body
- * @param html Optional HTML body for rich formatting
- */
-export async function sendEmail(
-  to: string,
-  subject: string,
-  body: string,
-  html?: string
-): Promise<void> {
+function layout(content: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:40px 20px">
+<div style="background:#111927;padding:24px 32px;border-radius:12px 12px 0 0">
+<h1 style="margin:0;color:#E1E7EF;font-size:20px;font-weight:600">Telum</h1>
+</div>
+<div style="background:#ffffff;padding:32px;border-radius:0 0 12px 12px;color:#1a1a1a;line-height:1.6">
+${content}
+</div>
+<p style="text-align:center;color:#8494A7;font-size:12px;margin-top:24px">
+&copy; ${new Date().getFullYear()} Telum. All rights reserved.<br>
+<a href="%UNSUBSCRIBE_URL%" style="color:#4A9E96">Unsubscribe</a>
+</p>
+</div></body></html>`;
+}
+
+export async function sendEmail(to: string, subject: string, body: string, html?: string): Promise<void> {
+  await send(to, subject, html || layout(`<p>${body.replace(/\n/g, '<br>')}</p>`));
+}
+
+export async function sendWelcomeEmail(userId: string, email: string, name: string): Promise<void> {
   try {
-    console.log('[EMAIL STUB] Sending email:', {
-      to,
-      subject,
-      bodyLength: body.length,
-      hasHtml: !!html,
-    });
-
-    // TODO: Integrate with email service provider (SendGrid, AWS SES, Resend, etc.)
-    // Example for Resend:
-    // const { Resend } = require('resend');
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({ from: 'noreply@telum.io', to, subject, html: html || body });
-
-    console.log('[EMAIL STUB] Email sent successfully');
+    await send(email, 'Welcome to Telum', layout(`
+      <h2 style="margin:0 0 16px;color:#111927">Welcome, ${name}!</h2>
+      <p>Thanks for joining Telum. We help insurance professionals generate compliant, branded content from industry news.</p>
+      <p><strong>Get started:</strong></p>
+      <ol>
+        <li>Set up your company profile</li>
+        <li>Choose a subscription plan</li>
+        <li>Generate your first content piece</li>
+      </ol>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/dashboard" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px">Go to Dashboard</a>
+    `));
   } catch (error) {
-    console.error('[EMAIL STUB] Failed to send email:', error);
-    throw new Error('Failed to send email');
+    console.error('Failed to send welcome email:', error);
   }
 }
 
-/**
- * Send welcome email to new user
- * @param userId User ID
- * @param email User email address
- * @param name User name
- */
-export async function sendWelcomeEmail(
-  userId: string,
-  email: string,
-  name: string
-): Promise<void> {
-  const subject = 'Welcome to Telum';
-  const body = `Hi ${name},
+export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/reset-password?token=${resetToken}`;
+  await send(email, 'Reset your Telum password', layout(`
+    <h2 style="margin:0 0 16px;color:#111927">Password Reset</h2>
+    <p>We received a request to reset your password. Click the button below to set a new password.</p>
+    <a href="${resetUrl}" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Reset Password</a>
+    <p style="color:#666;font-size:14px">This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
+  `));
+}
 
-Welcome to Telum! We're excited to have you on board.
+export async function sendEmailVerification(email: string, verifyToken: string): Promise<void> {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/api/auth/verify-email?token=${verifyToken}`;
+  await send(email, 'Verify your Telum email', layout(`
+    <h2 style="margin:0 0 16px;color:#111927">Verify Your Email</h2>
+    <p>Please confirm your email address by clicking the button below.</p>
+    <a href="${verifyUrl}" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Verify Email</a>
+    <p style="color:#666;font-size:14px">This link expires in 24 hours.</p>
+  `));
+}
 
-Telum helps regulated industries generate compliant content at scale. Here's what you can do next:
+export async function sendTeamInviteEmail(email: string, inviterName: string, companyName: string, inviteToken: string): Promise<void> {
+  const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/api/team/accept?token=${inviteToken}`;
+  await send(email, `You're invited to join ${companyName} on Telum`, layout(`
+    <h2 style="margin:0 0 16px;color:#111927">Team Invitation</h2>
+    <p><strong>${inviterName}</strong> has invited you to join <strong>${companyName}</strong> on Telum.</p>
+    <a href="${inviteUrl}" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Accept Invitation</a>
+    <p style="color:#666;font-size:14px">This invitation expires in 7 days.</p>
+  `));
+}
 
-1. Complete your company setup
-2. Generate your first piece of content
-3. Choose the perfect plan for your needs
-
-If you have any questions, our support team is here to help.
-
-Best regards,
-The Telum Team`;
-
+export async function sendUsageAlertEmail(userId: string, alertType: string, threshold: number, limitType: string): Promise<void> {
   try {
-    console.log('[EMAIL STUB] Sending welcome email:', {
-      userId,
-      email,
-      name,
-    });
+    const result = await sql`SELECT email, name FROM users WHERE id = ${userId}`;
+    const user = result.rows[0];
+    if (!user) return;
 
-    await sendEmail(email, subject, body);
-
-    console.log('[EMAIL STUB] Welcome email sent successfully');
+    const isWarning = alertType === 'usage_warning';
+    await send(user.email, isWarning
+      ? `Usage Alert: ${threshold}% of ${limitType} limit reached`
+      : `Limit Reached: ${limitType} limit exceeded`,
+    layout(`
+      <h2 style="margin:0 0 16px;color:#111927">${isWarning ? 'Usage Warning' : 'Limit Reached'}</h2>
+      <p>Hi ${user.name},</p>
+      <p>${isWarning
+        ? `You have used <strong>${threshold}%</strong> of your monthly ${limitType} limit.`
+        : `You have reached your monthly <strong>${limitType}</strong> limit.`
+      }</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/billing" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">${isWarning ? 'View Usage' : 'Upgrade Plan'}</a>
+    `));
   } catch (error) {
-    console.error('[EMAIL STUB] Failed to send welcome email:', error);
-    // Don't throw - welcome email failures shouldn't block user registration
+    console.error('Failed to send usage alert email:', error);
   }
 }
 
-/**
- * Send notification digest email with summary of recent notifications
- * @param userId User ID
- * @param notifications Array of notification objects
- */
-export async function sendNotificationDigest(
-  userId: string,
-  notifications: any[]
-): Promise<void> {
-  const subject = `Your Telum Digest - ${notifications.length} Updates`;
-  const notificationsText = notifications
-    .map((n) => `- [${n.type}] ${n.title}: ${n.message}`)
-    .join('\n');
-
-  const body = `You have ${notifications.length} new notification(s):
-
-${notificationsText}
-
-Log in to your Telum dashboard to take action on these items.
-
-Best regards,
-The Telum Team`;
-
+export async function sendSubscriptionConfirmationEmail(userId: string, planName: string, planPrice?: number): Promise<void> {
   try {
-    console.log('[EMAIL STUB] Sending notification digest:', {
-      userId,
-      notificationCount: notifications.length,
-    });
+    const result = await sql`SELECT email, name FROM users WHERE id = ${userId}`;
+    const user = result.rows[0];
+    if (!user) return;
 
-    // TODO: Query database to get user email and send
-    console.log('[EMAIL STUB] Notification digest prepared');
+    const priceText = planPrice ? `£${planPrice}/month` : '';
+    await send(user.email, `Subscription Confirmed: ${planName} Plan`, layout(`
+      <h2 style="margin:0 0 16px;color:#111927">Subscription Confirmed</h2>
+      <p>Hi ${user.name},</p>
+      <p>Your <strong>${planName}</strong> plan is now active${priceText ? ` at ${priceText}` : ''}.</p>
+      <div style="background:#f4f6f8;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="margin:0"><strong>Plan:</strong> ${planName}</p>
+        ${priceText ? `<p style="margin:4px 0 0"><strong>Price:</strong> ${priceText}</p>` : ''}
+        <p style="margin:4px 0 0"><strong>Status:</strong> Active</p>
+      </div>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/dashboard" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Go to Dashboard</a>
+    `));
   } catch (error) {
-    console.error('[EMAIL STUB] Failed to send notification digest:', error);
-    // Don't throw - digest failures shouldn't block other operations
+    console.error('Failed to send subscription confirmation email:', error);
   }
 }
 
-/**
- * Send content delivery email with generated content
- * @param userId User ID
- * @param content Array of generated content objects
- */
-export async function sendContentDeliveryEmail(
-  userId: string,
-  content: any[]
-): Promise<void> {
-  const subject = `Your Telum Content - ${content.length} Piece(s) Generated`;
-  const contentList = content
-    .map((c) => `- [${c.content_type}] ${c.title}`)
-    .join('\n');
-
-  const body = `Your content has been generated successfully!
-
-${contentList}
-
-Log in to your Telum dashboard to review, edit, and publish your content.
-
-Best regards,
-The Telum Team`;
-
+export async function sendNotificationDigest(userId: string, notifications: any[]): Promise<void> {
   try {
-    console.log('[EMAIL STUB] Sending content delivery email:', {
-      userId,
-      contentCount: content.length,
-      types: content.map((c) => c.content_type),
-    });
+    const result = await sql`SELECT email, name FROM users WHERE id = ${userId}`;
+    const user = result.rows[0];
+    if (!user) return;
 
-    // TODO: Query database to get user email and send
-    console.log('[EMAIL STUB] Content delivery email prepared');
+    const items = notifications.map(n => `<li><strong>${n.title}</strong>: ${n.message}</li>`).join('');
+    await send(user.email, `Your Telum Digest - ${notifications.length} Updates`, layout(`
+      <h2 style="margin:0 0 16px;color:#111927">Your Activity Digest</h2>
+      <p>Hi ${user.name}, you have ${notifications.length} new update(s):</p>
+      <ul>${items}</ul>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/dashboard" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">View Dashboard</a>
+    `));
   } catch (error) {
-    console.error('[EMAIL STUB] Failed to send content delivery email:', error);
-    // Don't throw - delivery failures shouldn't block content generation
+    console.error('Failed to send notification digest:', error);
   }
 }
 
-/**
- * Send usage alert email when user approaches or exceeds limits
- * @param userId User ID
- * @param alertType Type of alert (usage_warning or limit_reached)
- * @param threshold Percentage or count of limit reached
- * @param limitType Type of limit (articles or content)
- */
-export async function sendUsageAlertEmail(
-  userId: string,
-  alertType: string,
-  threshold: number,
-  limitType: string
-): Promise<void> {
-  const isWarning = alertType === 'usage_warning';
-  const subject = isWarning
-    ? `Usage Alert: ${threshold}% of ${limitType} limit reached`
-    : `Limit Reached: ${limitType} limit exceeded`;
-
-  const body = isWarning
-    ? `You have used ${threshold}% of your monthly ${limitType} limit.
-
-Consider upgrading your plan to continue using Telum without interruptions.
-
-Log in to your dashboard to view your usage and upgrade options.
-
-Best regards,
-The Telum Team`
-    : `You have reached your monthly ${limitType} limit.
-
-To continue generating content, please upgrade your subscription plan.
-
-Log in to your dashboard to view upgrade options.
-
-Best regards,
-The Telum Team`;
-
+export async function sendContentDeliveryEmail(userId: string, content: any[]): Promise<void> {
   try {
-    console.log('[EMAIL STUB] Sending usage alert email:', {
-      userId,
-      alertType,
-      threshold,
-      limitType,
-    });
+    const result = await sql`SELECT email, name FROM users WHERE id = ${userId}`;
+    const user = result.rows[0];
+    if (!user) return;
 
-    // TODO: Query database to get user email and send
-    console.log('[EMAIL STUB] Usage alert email prepared');
+    const items = content.map(c => `<li><strong>[${c.content_type}]</strong> ${c.title}</li>`).join('');
+    await send(user.email, `Your Telum Content - ${content.length} Piece(s) Generated`, layout(`
+      <h2 style="margin:0 0 16px;color:#111927">Content Ready</h2>
+      <p>Hi ${user.name}, your content has been generated:</p>
+      <ul>${items}</ul>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://telum.io'}/content" style="display:inline-block;background:#4A9E96;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Review Content</a>
+    `));
   } catch (error) {
-    console.error('[EMAIL STUB] Failed to send usage alert email:', error);
-    // Don't throw - alert email failures shouldn't block other operations
-  }
-}
-
-/**
- * Send subscription confirmation email after plan selection or upgrade
- * @param userId User ID
- * @param planName Name of the selected plan
- * @param planPrice Monthly price of the plan
- */
-export async function sendSubscriptionConfirmationEmail(
-  userId: string,
-  planName: string,
-  planPrice?: number
-): Promise<void> {
-  const priceText = planPrice ? ` at £${(planPrice / 100).toFixed(2)}/month` : '';
-  const subject = `Subscription Confirmed: ${planName} Plan`;
-
-  const body = `Your subscription to the ${planName} plan has been confirmed${priceText}.
-
-Your subscription details:
-- Plan: ${planName}
-${planPrice ? `- Price: £${(planPrice / 100).toFixed(2)}/month` : ''}
-- Status: Active
-
-You now have access to all ${planName} plan features. Log in to your dashboard to get started.
-
-If you have any questions about your subscription, please contact our support team.
-
-Best regards,
-The Telum Team`;
-
-  try {
-    console.log('[EMAIL STUB] Sending subscription confirmation email:', {
-      userId,
-      planName,
-      planPrice,
-    });
-
-    // TODO: Query database to get user email and send
-    console.log('[EMAIL STUB] Subscription confirmation email prepared');
-  } catch (error) {
-    console.error('[EMAIL STUB] Failed to send subscription confirmation email:', error);
-    // Don't throw - confirmation email failures shouldn't block subscription creation
+    console.error('Failed to send content delivery email:', error);
   }
 }
 
 export default {
   sendEmail,
   sendWelcomeEmail,
-  sendNotificationDigest,
-  sendContentDeliveryEmail,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  sendTeamInviteEmail,
   sendUsageAlertEmail,
   sendSubscriptionConfirmationEmail,
+  sendNotificationDigest,
+  sendContentDeliveryEmail,
 };

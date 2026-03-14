@@ -181,6 +181,95 @@ export async function initDb() {
     )
   `;
 
+  // New feature tables
+  await sql`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      used BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      used BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS custom_templates (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      content_type TEXT NOT NULL,
+      prompt_template TEXT NOT NULL,
+      variables TEXT DEFAULT '[]',
+      is_default BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS team_members (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT DEFAULT 'editor',
+      invited_by TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS team_invites (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      role TEXT DEFAULT 'editor',
+      token TEXT UNIQUE NOT NULL,
+      invited_by TEXT NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      accepted BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      key_hash TEXT NOT NULL,
+      key_prefix TEXT NOT NULL,
+      permissions TEXT DEFAULT '["read","generate"]',
+      last_used_at TIMESTAMP,
+      revoked_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_article_actions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      article_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, article_id, action)
+    )
+  `;
+
   // Seed data
   await seedDemoArticles();
   await seedPlans();

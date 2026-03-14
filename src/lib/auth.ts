@@ -5,8 +5,15 @@ import { sql } from '@vercel/postgres';
 import { getDb } from './db';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'telum-dev-secret-change-in-production';
 const TOKEN_EXPIRY = '7d';
+
+function getSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    console.warn('WARNING: JWT_SECRET not set in production!');
+  }
+  return secret || 'telum-dev-secret-change-in-production';
+}
 
 // bcryptjs 3.x is ESM — resolve hash/compare from default or named exports
 const bcryptHash = (bcrypt as any).default?.hash || bcrypt.hash;
@@ -43,7 +50,7 @@ export async function register(email: string, password: string, name: string): P
   await sql`INSERT INTO users (id, email, password_hash, name, role) VALUES (${id}, ${email}, ${passwordHash}, ${name}, ${'user'})`;
 
   const user: User = { id, email, name, role: 'user', created_at: new Date().toISOString() };
-  const token = jwtSign({ userId: id, email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  const token = jwtSign({ userId: id, email }, getSecret(), { expiresIn: TOKEN_EXPIRY });
 
   return { success: true, user, token };
 }
@@ -63,14 +70,14 @@ export async function login(email: string, password: string): Promise<AuthResult
   }
 
   const user: User = { id: row.id, email: row.email, name: row.name, role: row.role || 'user', created_at: row.created_at };
-  const token = jwtSign({ userId: row.id, email: row.email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  const token = jwtSign({ userId: row.id, email: row.email }, getSecret(), { expiresIn: TOKEN_EXPIRY });
 
   return { success: true, user, token };
 }
 
 export function verifyToken(token: string): { userId: string; email: string } | null {
   try {
-    return jwtVerify(token, JWT_SECRET) as { userId: string; email: string };
+    return jwtVerify(token, getSecret()) as { userId: string; email: string };
   } catch {
     return null;
   }

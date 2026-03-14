@@ -2,7 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { sql } from '@vercel/postgres';
 import { getDb } from './db';
 import { NewsArticle } from './news';
-import { checkCompliance, ComplianceResult } from './compliance';
+import { checkCompliance } from './compliance';
+import Anthropic from '@anthropic-ai/sdk';
 
 export interface Company {
   id: string;
@@ -31,10 +32,134 @@ export interface GeneratedContent {
 
 type ContentType = 'newsletter' | 'linkedin' | 'podcast' | 'briefing';
 
-// --- CONTENT GENERATION ENGINE ---
-// This uses template-based generation with intelligent content assembly.
-// In production, you'd swap the generateXXX functions to call Claude/GPT API.
-// The templates are designed to produce realistic, insurance-specific content.
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
+
+function buildArticleContext(articles: NewsArticle[]): string {
+  return articles.map((a, i) => {
+    const tags = JSON.parse(a.tags || '[]');
+    return `Article ${i + 1}: "${a.title}"
+Source: ${a.source}
+Tags: ${tags.join(', ')}
+Summary: ${a.summary}`;
+  }).join('\n\n');
+}
+
+function buildCompanyContext(company: Company): string {
+  return `Company: ${company.name}
+Type: ${company.type || 'Insurance company'}
+Niche: ${company.niche || 'Specialty Insurance'}
+Brand Voice: ${company.brand_voice || 'Professional and authoritative'}
+Description: ${company.description || ''}`;
+}
+
+const SYSTEM_PROMPT = `You are Telum, an AI content engine for the insurance industry. You generate high-quality, compliant content for insurance companies including MGAs, brokers, and insurtechs.
+
+Rules:
+- Write in British English
+- Use professional, authoritative language appropriate for the insurance industry
+- Include relevant regulatory disclaimers where appropriate
+- Never make guarantees about returns, coverage outcomes, or market performance
+- Reference the company's brand voice and niche when generating content
+- Include FCA compliance disclaimers on UK-targeted content
+- Do not fabricate quotes or statistics not present in the source articles`;
+
+const TYPE_PROMPTS: Record<ContentType, string> = {
+  newsletter: `Generate a professional weekly market intelligence newsletter. Structure:
+1. Title with company name and week number
+2. Opening paragraph summarizing the key themes
+3. For each article, create a section with:
+   - Headline
+   - Summary of the development
+   - "Why this matters for [niche]" analysis
+   - Relevant tags
+4. Market outlook paragraph
+5. Regulatory disclaimer
+
+Format in Markdown. Make it substantive and insightful, not just a summary.`,
+
+  linkedin: `Generate 2 LinkedIn posts based on the articles. For each post:
+1. An attention-grabbing opening hook (no emoji spam, keep it professional)
+2. Key insight from the article
+3. Company-specific perspective and value proposition
+4. A question to drive engagement
+5. Relevant hashtags
+
+Keep each post under 1300 characters. Separate posts with "---".`,
+
+  podcast: `Generate a podcast episode script. Structure:
+1. Episode title and metadata (format, duration 15-20 min, producer)
+2. Cold open with host introduction script
+3. For each article (up to 3), create a segment with:
+   - Segment title and estimated duration (4-5 min)
+   - Host script introducing the topic
+   - Key discussion points
+   - Transition to next segment
+4. Wrap-up with call to action
+5. Outro with regulatory disclaimer
+
+Write it as a complete, ready-to-read script.`,
+
+  briefing: `Generate a formal client market briefing document. Structure:
+1. Title, classification, date, preparer, niche focus
+2. Executive summary (1 paragraph covering all developments)
+3. For each article, create a "Key Development" section with:
+   - Title and source/classification
+   - Summary
+   - Impact assessment for the company's niche
+   - Recommended action
+4. Forward look paragraph
+5. Confidentiality notice and regulatory disclaimer
+
+This should be a professional, boardroom-ready document.`,
+};
+
+async function generateWithClaude(articles: NewsArticle[], company: Company, contentType: ContentType): Promise<{ title: string; content: string }> {
+  if (!anthropic) {
+    // Fall back to template-based generation if no API key
+    return generateWithTemplate(articles, company, contentType);
+  }
+
+  const articleContext = buildArticleContext(articles);
+  const companyContext = buildCompanyContext(company);
+  const typePrompt = TYPE_PROMPTS[contentType];
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    system: SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: `${companyContext}
+
+Source Articles:
+${articleContext}
+
+Task: ${typePrompt}
+
+Generate the ${contentType} content now. Output only the content itself, no meta-commentary.`,
+    }],
+  });
+
+  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+
+  // Extract title from first markdown heading or first line
+  const titleMatch = text.match(/^#\s+(.+)/m);
+  const title = titleMatch
+    ? titleMatch[1].trim()
+    : `${company.name} — ${contentType.charAt(0).toUpperCase() + contentType.slice(1)}`;
+
+  return { title, content: text };
+}
+
+// Template-based fallback (original implementation)
+function generateWithTemplate(articles: NewsArticle[], company: Company, contentType: ContentType): { title: string; content: string } {
+  switch (contentType) {
+    case 'newsletter': return generateNewsletter(articles, company);
+    case 'linkedin': return generateLinkedIn(articles, company);
+    case 'podcast': return generatePodcast(articles, company);
+    case 'briefing': return generateBriefing(articles, company);
+  }
+}
 
 export async function generateContent(
   articles: NewsArticle[],
@@ -47,23 +172,7 @@ export async function generateContent(
   const frameworks = JSON.parse(company.compliance_frameworks || '["FCA"]');
 
   for (const type of contentTypes) {
-    let title = '';
-    let content = '';
-
-    switch (type) {
-      case 'newsletter':
-        ({ title, content } = generateNewsletter(articles, company));
-        break;
-      case 'linkedin':
-        ({ title, content } = generateLinkedIn(articles, company));
-        break;
-      case 'podcast':
-        ({ title, content } = generatePodcast(articles, company));
-        break;
-      case 'briefing':
-        ({ title, content } = generateBriefing(articles, company));
-        break;
-    }
+    const { title, content } = await generateWithClaude(articles, company, type);
 
     // Run compliance check
     const compliance = checkCompliance(content, frameworks);
@@ -88,50 +197,21 @@ export async function generateContent(
   return results;
 }
 
+// --- TEMPLATE FALLBACK FUNCTIONS ---
+
 function generateNewsletter(articles: NewsArticle[], company: Company): { title: string; content: string } {
   const today = new Date();
   const weekNum = getWeekNumber(today);
   const niche = company.niche || 'Specialty Insurance';
-
   const title = `${company.name} Market Intelligence — Week ${weekNum}`;
 
   const articleSections = articles.map((a, i) => {
     const tags = JSON.parse(a.tags || '[]');
     const tagLabels = tags.map((t: string) => `#${t}`).join(' ');
-
-    return `### ${i + 1}. ${a.title}
-
-${a.summary}
-
-**Why this matters for ${niche}:** ${generateInsight(a, company)}
-
-${tagLabels}`;
+    return `### ${i + 1}. ${a.title}\n\n${a.summary}\n\n**Why this matters for ${niche}:** ${generateInsight(a, company)}\n\n${tagLabels}`;
   }).join('\n\n---\n\n');
 
-  const content = `# ${title}
-
-*Your weekly intelligence briefing from ${company.name}*
-*${today.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*
-
----
-
-## This Week's Key Developments
-
-${articleSections}
-
----
-
-## Market Outlook
-
-The developments covered this week signal continued evolution in the ${niche.toLowerCase()} market. We recommend that our clients and partners review their exposure to these emerging trends and consider how they may impact renewal strategies in the coming quarters.
-
-${company.name} continues to monitor these developments and will provide updates as market conditions evolve.
-
----
-
-*This newsletter is prepared by ${company.name} for informational purposes only. It does not constitute advice or a recommendation. ${company.name} is authorised and regulated by the Financial Conduct Authority.*
-
-*To unsubscribe, reply to this email or contact us at info@${company.name.toLowerCase().replace(/\s+/g, '')}.com*`;
+  const content = `# ${title}\n\n*Your weekly intelligence briefing from ${company.name}*\n*${today.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*\n\n---\n\n## This Week's Key Developments\n\n${articleSections}\n\n---\n\n## Market Outlook\n\nThe developments covered this week signal continued evolution in the ${niche.toLowerCase()} market. We recommend that our clients and partners review their exposure to these emerging trends and consider how they may impact renewal strategies in the coming quarters.\n\n${company.name} continues to monitor these developments and will provide updates as market conditions evolve.\n\n---\n\n*This newsletter is prepared by ${company.name} for informational purposes only. It does not constitute advice or a recommendation. ${company.name} is authorised and regulated by the Financial Conduct Authority.*\n\n*To unsubscribe, reply to this email or contact us at info@${company.name.toLowerCase().replace(/\\s+/g, '')}.com*`;
 
   return { title, content };
 }
@@ -145,26 +225,10 @@ function generateLinkedIn(articles: NewsArticle[], company: Company): { title: s
     const insight = generateInsight(article, company);
     const tags = JSON.parse(article.tags || '[]');
     const hashtags = tags.map((t: string) => `#${t}`).join(' ');
-
-    return `## Post ${i + 1}: ${article.title}
-
-${hook}
-
-${article.summary}
-
-Here's our take: ${insight}
-
-The ${niche.toLowerCase()} market needs to stay ahead of developments like this. At ${company.name}, we're helping our clients navigate exactly these kinds of shifts.
-
-What's your view? How is this impacting your book?
-
-${hashtags} #insurance #${company.type} #marketintelligence
-
----`;
+    return `## Post ${i + 1}: ${article.title}\n\n${hook}\n\n${article.summary}\n\nHere's our take: ${insight}\n\nThe ${niche.toLowerCase()} market needs to stay ahead of developments like this. At ${company.name}, we're helping our clients navigate exactly these kinds of shifts.\n\nWhat's your view? How is this impacting your book?\n\n${hashtags} #insurance #${company.type} #marketintelligence\n\n---`;
   });
 
-  const content = posts.join('\n\n');
-  return { title: `LinkedIn Posts — ${mainArticle.title.substring(0, 50)}...`, content };
+  return { title: `LinkedIn Posts — ${mainArticle.title.substring(0, 50)}...`, content: posts.join('\n\n') };
 }
 
 function generatePodcast(articles: NewsArticle[], company: Company): { title: string; content: string } {
@@ -173,61 +237,10 @@ function generatePodcast(articles: NewsArticle[], company: Company): { title: st
 
   const topicSegments = articles.slice(0, 3).map((a, i) => {
     const insight = generateInsight(a, company);
-    return `### Segment ${i + 1}: ${a.title}
-**Duration:** 4-5 minutes
-
-**Host script:**
-
-"Our ${i === 0 ? 'first' : i === 1 ? 'second' : 'final'} story this week takes us to ${a.source}${a.category === 'uk_market' ? ' and the London Market' : ''}."
-
-"${a.summary}"
-
-**Key discussion points:**
-- What this means for ${niche.toLowerCase()} specifically
-- ${insight}
-- How market participants should be positioning themselves
-
-**Suggested guest clip:** *[Insert 30-second clip from industry expert on this topic]*
-
-**Transition:** "${i < articles.length - 1 ? 'Moving on to our next development...' : 'And that brings us to the end of this week\'s key stories.'}"`;
+    return `### Segment ${i + 1}: ${a.title}\n**Duration:** 4-5 minutes\n\n**Host script:**\n\n"Our ${i === 0 ? 'first' : i === 1 ? 'second' : 'final'} story this week takes us to ${a.source}."\n\n"${a.summary}"\n\n**Key discussion points:**\n- What this means for ${niche.toLowerCase()} specifically\n- ${insight}\n- How market participants should be positioning themselves\n\n**Transition:** "${i < articles.length - 1 ? 'Moving on to our next development...' : 'And that brings us to the end of this week\'s key stories.'}"`;
   });
 
-  const content = `# ${title}
-
-## Episode Overview
-**Format:** Weekly market intelligence podcast
-**Duration:** 15-20 minutes
-**Produced by:** ${company.name}
-**Niche focus:** ${niche}
-
----
-
-## Cold Open
-**Duration:** 1-2 minutes
-
-**Host script:**
-
-"Welcome to ${company.name} Market Pulse, your weekly briefing on the developments shaping the ${niche.toLowerCase()} market. I'm [Host Name], and this week we've got ${articles.length} key stories that every ${company.type === 'mga' ? 'MGA' : company.type === 'broker' ? 'broker' : 'insurtech'} professional needs to know about."
-
-"Let's dive straight in."
-
----
-
-${topicSegments.join('\n\n---\n\n')}
-
----
-
-## Wrap-Up
-**Duration:** 1-2 minutes
-
-**Host script:**
-
-"That's your market intelligence for this week. If any of these developments impact your portfolio or if you'd like to discuss how ${company.name} can help you navigate these market shifts, reach out to us directly."
-
-"Don't forget to subscribe so you never miss an update. Until next time, stay sharp and stay informed."
-
-**Outro music and legal disclaimer:**
-*"${company.name} Market Pulse is produced for informational purposes only and does not constitute insurance advice. ${company.name} is authorised and regulated by the Financial Conduct Authority."*`;
+  const content = `# ${title}\n\n## Episode Overview\n**Format:** Weekly market intelligence podcast\n**Duration:** 15-20 minutes\n**Produced by:** ${company.name}\n**Niche focus:** ${niche}\n\n---\n\n## Cold Open\n**Duration:** 1-2 minutes\n\n**Host script:**\n\n"Welcome to ${company.name} Market Pulse, your weekly briefing on the developments shaping the ${niche.toLowerCase()} market. I'm [Host Name], and this week we've got ${articles.length} key stories."\n\n"Let's dive straight in."\n\n---\n\n${topicSegments.join('\n\n---\n\n')}\n\n---\n\n## Wrap-Up\n\n"That's your market intelligence for this week. Don't forget to subscribe so you never miss an update. Until next time, stay sharp and stay informed."\n\n*"${company.name} Market Pulse is produced for informational purposes only and does not constitute insurance advice. ${company.name} is authorised and regulated by the Financial Conduct Authority."*`;
 
   return { title, content };
 }
@@ -240,103 +253,50 @@ function generateBriefing(articles: NewsArticle[], company: Company): { title: s
   const developments = articles.map((a, i) => {
     const insight = generateInsight(a, company);
     const tags = JSON.parse(a.tags || '[]');
-
-    return `### ${i + 1}. ${a.title}
-
-**Source:** ${a.source} | **Classification:** ${tags.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
-
-${a.summary}
-
-**Impact Assessment for ${niche}:**
-${insight}
-
-**Recommended Action:** ${generateAction(a, company)}`;
+    return `### ${i + 1}. ${a.title}\n\n**Source:** ${a.source} | **Classification:** ${tags.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}\n\n${a.summary}\n\n**Impact Assessment for ${niche}:**\n${insight}\n\n**Recommended Action:** ${generateAction(a, company)}`;
   });
 
-  const content = `# ${title}
-
-**Classification:** For Client Distribution
-**Date:** ${today.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
-**Prepared by:** ${company.name} Market Intelligence
-**Niche Focus:** ${niche}
-
----
-
-## Executive Summary
-
-This briefing covers ${articles.length} key market developments relevant to ${niche.toLowerCase()} from the past week. The developments covered span ${[...new Set(articles.flatMap(a => JSON.parse(a.tags || '[]')))].slice(0, 4).join(', ')} — areas with direct implications for our clients' risk profiles and placement strategies.
-
----
-
-## Key Developments
-
-${developments.join('\n\n---\n\n')}
-
----
-
-## Forward Look
-
-Based on the developments outlined above, we anticipate continued market attention on these themes through the upcoming renewal season. ${company.name} is actively monitoring these trends and will provide further updates as material developments emerge.
-
-For any questions regarding this briefing or to discuss specific implications for your programme, please contact your ${company.name} representative directly.
-
----
-
-*This document is prepared by ${company.name} for the exclusive use of its clients and business partners. The information contained herein is based on sources believed to be reliable but is not guaranteed. This briefing does not constitute insurance or financial advice.*
-
-*${company.name} is authorised and regulated by the Financial Conduct Authority. FRN: [Your FRN]*`;
+  const content = `# ${title}\n\n**Classification:** For Client Distribution\n**Date:** ${today.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}\n**Prepared by:** ${company.name} Market Intelligence\n**Niche Focus:** ${niche}\n\n---\n\n## Executive Summary\n\nThis briefing covers ${articles.length} key market developments relevant to ${niche.toLowerCase()} from the past week.\n\n---\n\n## Key Developments\n\n${developments.join('\n\n---\n\n')}\n\n---\n\n## Forward Look\n\nBased on the developments outlined above, we anticipate continued market attention on these themes through the upcoming renewal season.\n\n---\n\n*This document is prepared by ${company.name} for the exclusive use of its clients and business partners. It does not constitute insurance or financial advice.*\n\n*${company.name} is authorised and regulated by the Financial Conduct Authority.*`;
 
   return { title, content };
 }
 
-// --- HELPER FUNCTIONS ---
+// --- HELPERS ---
 
 function generateHook(article: NewsArticle): string {
-  const hooks = [
-    `🔔 Breaking development in the insurance market that every underwriter should be watching closely.`,
-    `The market is shifting. Here's what you need to know about the latest development.`,
-    `This is going to reshape how the industry approaches risk. Pay attention.`,
-    `📊 New data just dropped that has significant implications for the specialty market.`,
-    `Important regulatory update that will impact how we all do business.`,
-  ];
   const tags = JSON.parse(article.tags || '[]');
-  if (tags.includes('regulation')) return hooks[4];
-  if (tags.includes('ils') || tags.includes('reinsurance')) return hooks[3];
-  if (tags.includes('cyber')) return hooks[0];
-  return hooks[Math.floor(Math.random() * hooks.length)];
+  if (tags.includes('regulation')) return 'Important regulatory update that will impact how the industry approaches risk.';
+  if (tags.includes('ils') || tags.includes('reinsurance')) return 'New data just dropped that has significant implications for the specialty market.';
+  if (tags.includes('cyber')) return 'Breaking development in the insurance market that every underwriter should be watching closely.';
+  return 'The market is shifting. Here is what you need to know about the latest development.';
 }
 
 function generateInsight(article: NewsArticle, company: Company): string {
   const tags = JSON.parse(article.tags || '[]');
   const niche = company.niche || 'specialty insurance';
-
   const insights: Record<string, string> = {
-    cyber: `For ${niche} specialists, this development directly impacts how cyber risk is assessed, priced, and transferred. We expect this to influence policy wordings and coverage terms across the market in the coming months.`,
-    regulation: `Regulatory shifts like this require immediate attention from ${company.type === 'mga' ? 'MGAs' : company.type === 'broker' ? 'brokers' : 'insurtech firms'} in the ${niche} space. Compliance teams should review their current frameworks against these new requirements.`,
-    lloyds: `As a ${niche} specialist operating in the London Market, this Lloyd's development has direct implications for how we structure and place risk. Capacity deployment and syndicate strategies will need to adapt.`,
-    reinsurance: `The reinsurance market dynamics described here will flow through to the ${niche} market via pricing, capacity availability, and treaty terms. Our clients should expect these themes to feature prominently at upcoming renewals.`,
-    climate: `Climate risk continues to reshape the insurance landscape. For ${niche} practitioners, the intersection of physical risk modelling and portfolio management is becoming impossible to ignore.`,
-    insurtech: `The technology evolution in insurance continues to accelerate. For established ${company.type === 'mga' ? 'MGAs' : company.type === 'broker' ? 'brokers' : 'carriers'}, the key question is how to leverage these innovations to improve underwriting outcomes and client service.`,
-    ils: `The convergence of traditional and alternative risk transfer creates new opportunities. Understanding how ILS developments impact ${niche} pricing and capacity is essential for informed decision-making.`,
+    cyber: `For ${niche} specialists, this development directly impacts how cyber risk is assessed, priced, and transferred.`,
+    regulation: `Regulatory shifts like this require immediate attention from ${company.type === 'mga' ? 'MGAs' : company.type === 'broker' ? 'brokers' : 'insurtech firms'} in the ${niche} space.`,
+    lloyds: `As a ${niche} specialist in the London Market, this has direct implications for how we structure and place risk.`,
+    reinsurance: `The reinsurance market dynamics described here will flow through to the ${niche} market via pricing, capacity, and treaty terms.`,
+    climate: `Climate risk continues to reshape the insurance landscape for ${niche} practitioners.`,
+    insurtech: `The technology evolution in insurance continues to accelerate for ${company.type === 'mga' ? 'MGAs' : company.type === 'broker' ? 'brokers' : 'carriers'}.`,
+    ils: `The convergence of traditional and alternative risk transfer creates new opportunities for ${niche}.`,
   };
-
   for (const tag of tags) {
     if (insights[tag]) return insights[tag];
   }
-
-  return `This development has implications across the ${niche} market. We recommend monitoring how it evolves and considering the potential impact on current and prospective risk positions.`;
+  return `This development has implications across the ${niche} market.`;
 }
 
 function generateAction(article: NewsArticle, company: Company): string {
   const tags = JSON.parse(article.tags || '[]');
-
-  if (tags.includes('regulation')) return 'Review compliance framework and update internal processes to reflect new requirements. Schedule a briefing with your compliance team.';
-  if (tags.includes('cyber')) return 'Assess current cyber exposure and review policy wordings against the latest market developments. Consider portfolio impact analysis.';
-  if (tags.includes('climate')) return 'Review natural catastrophe exposure models and consider updating accumulation scenarios. Engage with brokers on available risk transfer options.';
-  if (tags.includes('lloyds')) return 'Monitor capacity provider communications and prepare for potential underwriting guideline changes. Review current Lloyd\'s placement strategy.';
-  if (tags.includes('reinsurance')) return 'Evaluate reinsurance programme structure in light of market shifts. Consider early engagement with reinsurance partners ahead of renewal.';
-
-  return 'Monitor developments and assess potential impact on current portfolio and business strategy. No immediate action required but keep this on the radar.';
+  if (tags.includes('regulation')) return 'Review compliance framework and update internal processes.';
+  if (tags.includes('cyber')) return 'Assess current cyber exposure and review policy wordings.';
+  if (tags.includes('climate')) return 'Review natural catastrophe exposure models and update accumulation scenarios.';
+  if (tags.includes('lloyds')) return 'Monitor capacity provider communications and review placement strategy.';
+  if (tags.includes('reinsurance')) return 'Evaluate reinsurance programme structure and engage with partners ahead of renewal.';
+  return 'Monitor developments and assess potential impact on current portfolio.';
 }
 
 function getWeekNumber(date: Date): number {
@@ -349,13 +309,9 @@ function getWeekNumber(date: Date): number {
 export async function getContentByCompany(companyId: string, type?: string): Promise<GeneratedContent[]> {
   await getDb();
   if (type) {
-    const result = await sql`
-      SELECT * FROM generated_content WHERE company_id = ${companyId} AND content_type = ${type} ORDER BY created_at DESC
-    `;
+    const result = await sql`SELECT * FROM generated_content WHERE company_id = ${companyId} AND content_type = ${type} ORDER BY created_at DESC`;
     return result.rows as unknown as GeneratedContent[];
   }
-  const result = await sql`
-    SELECT * FROM generated_content WHERE company_id = ${companyId} ORDER BY created_at DESC
-  `;
+  const result = await sql`SELECT * FROM generated_content WHERE company_id = ${companyId} ORDER BY created_at DESC`;
   return result.rows as unknown as GeneratedContent[];
 }

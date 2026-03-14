@@ -3,23 +3,41 @@ import { getCurrentUser } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 import { getDb } from '@/lib/db';
 
-// Track bookmarks and dismissals in memory (in production, use a user_articles table)
-const userBookmarks = new Map<string, Set<string>>();
-const userDismissals = new Map<string, Set<string>>();
+async function ensureTable() {
+  await getDb();
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_article_actions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      article_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, article_id, action)
+    )
+  `;
+}
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  await ensureTable();
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
   if (action === 'bookmarks') {
-    const bookmarks = userBookmarks.get(user.id) || new Set();
-    return NextResponse.json({ bookmarkedIds: Array.from(bookmarks) });
+    const result = await sql`
+      SELECT article_id FROM user_article_actions
+      WHERE user_id = ${user.id} AND action = 'bookmark'
+    `;
+    return NextResponse.json({ bookmarkedIds: result.rows.map(r => r.article_id) });
   } else if (action === 'dismissals') {
-    const dismissals = userDismissals.get(user.id) || new Set();
-    return NextResponse.json({ dismissedIds: Array.from(dismissals) });
+    const result = await sql`
+      SELECT article_id FROM user_article_actions
+      WHERE user_id = ${user.id} AND action = 'dismiss'
+    `;
+    return NextResponse.json({ dismissedIds: result.rows.map(r => r.article_id) });
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -29,6 +47,8 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  await ensureTable();
+
   try {
     const { action, articleIds } = await request.json();
 
@@ -37,49 +57,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'bookmark') {
-      if (!userBookmarks.has(user.id)) {
-        userBookmarks.set(user.id, new Set());
+      for (const articleId of articleIds) {
+        const id = `${user.id}-${articleId}-bookmark`;
+        await sql`
+          INSERT INTO user_article_actions (id, user_id, article_id, action)
+          VALUES (${id}, ${user.id}, ${articleId}, 'bookmark')
+          ON CONFLICT (user_id, article_id, action) DO NOTHING
+        `;
       }
-      const bookmarks = userBookmarks.get(user.id)!;
-      articleIds.forEach((id) => bookmarks.add(id));
-
-      return NextResponse.json({
-        success: true,
-        message: `Bookmarked ${articleIds.length} article(s)`,
-      });
+      return NextResponse.json({ success: true, message: `Bookmarked ${articleIds.length} article(s)` });
     } else if (action === 'unbookmark') {
-      if (!userBookmarks.has(user.id)) {
-        userBookmarks.set(user.id, new Set());
+      for (const articleId of articleIds) {
+        await sql`DELETE FROM user_article_actions WHERE user_id = ${user.id} AND article_id = ${articleId} AND action = 'bookmark'`;
       }
-      const bookmarks = userBookmarks.get(user.id)!;
-      articleIds.forEach((id) => bookmarks.delete(id));
-
-      return NextResponse.json({
-        success: true,
-        message: `Removed ${articleIds.length} bookmark(s)`,
-      });
+      return NextResponse.json({ success: true, message: `Removed ${articleIds.length} bookmark(s)` });
     } else if (action === 'dismiss') {
-      if (!userDismissals.has(user.id)) {
-        userDismissals.set(user.id, new Set());
+      for (const articleId of articleIds) {
+        const id = `${user.id}-${articleId}-dismiss`;
+        await sql`
+          INSERT INTO user_article_actions (id, user_id, article_id, action)
+          VALUES (${id}, ${user.id}, ${articleId}, 'dismiss')
+          ON CONFLICT (user_id, article_id, action) DO NOTHING
+        `;
       }
-      const dismissals = userDismissals.get(user.id)!;
-      articleIds.forEach((id) => dismissals.add(id));
-
-      return NextResponse.json({
-        success: true,
-        message: `Dismissed ${articleIds.length} article(s)`,
-      });
+      return NextResponse.json({ success: true, message: `Dismissed ${articleIds.length} article(s)` });
     } else if (action === 'undismiss') {
-      if (!userDismissals.has(user.id)) {
-        userDismissals.set(user.id, new Set());
+      for (const articleId of articleIds) {
+        await sql`DELETE FROM user_article_actions WHERE user_id = ${user.id} AND article_id = ${articleId} AND action = 'dismiss'`;
       }
-      const dismissals = userDismissals.get(user.id)!;
-      articleIds.forEach((id) => dismissals.delete(id));
-
-      return NextResponse.json({
-        success: true,
-        message: `Restored ${articleIds.length} article(s)`,
-      });
+      return NextResponse.json({ success: true, message: `Restored ${articleIds.length} article(s)` });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
