@@ -11,25 +11,26 @@ const parser = new Parser({
 });
 
 // Insurance industry RSS feeds — tiered by relevance
-// Tier 1: UK specialty & regulatory (highest value for MGA/broker audience)
-// Tier 2: Reinsurance, trade bodies & EU regulation
-// Tier 3: General/international insurance news
+// Tier 1: UK market & specialty (highest value for MGA/broker audience)
+// Tier 2: Reinsurance & ILS
+// Tier 3: General / international / regulation
 const INSURANCE_FEEDS = [
-  // Tier 1 — UK specialty & regulatory
-  { url: 'https://www.theinsurer.com/feed/', source: 'The Insurer', category: 'specialty' },
-  { url: 'https://www.insuranceinsider.com/feed/', source: 'Insurance Insider', category: 'specialty' },
-  { url: 'https://www.intelligentinsurer.com/feed/', source: 'Intelligent Insurer', category: 'specialty' },
+  // Tier 1 — UK market & specialty
   { url: 'https://www.insurancetimes.co.uk/rss', source: 'Insurance Times', category: 'uk_market' },
-  { url: 'https://www.postonline.co.uk/rss', source: 'Post Magazine', category: 'uk_market' },
+  { url: 'https://www.insurancebusinessmag.com/uk/rss/', source: 'Insurance Business UK', category: 'uk_market' },
+  { url: 'https://www.insuranceage.co.uk/feeds/rss', source: 'Insurance Age', category: 'uk_market' },
   { url: 'https://www.fca.org.uk/news/rss.xml', source: 'FCA', category: 'regulation' },
-  // Tier 2 — Reinsurance & trade bodies
+  // Tier 2 — Reinsurance & ILS
   { url: 'https://www.reinsurancene.ws/feed/', source: 'Reinsurance News', category: 'reinsurance' },
-  { url: 'https://www.globalreinsurance.com/rss', source: 'Global Reinsurance', category: 'reinsurance' },
-  { url: 'https://www.abi.org.uk/news/rss/', source: 'ABI', category: 'uk_market' },
-  // Tier 3 — General / international / podcast
-  { url: 'https://www.insurancejournal.com/feed/', source: 'Insurance Journal', category: 'general' },
   { url: 'https://www.artemis.bm/feed/', source: 'Artemis', category: 'ils' },
+  // Tier 3 — General / international
+  { url: 'https://www.insurancejournal.com/feed/', source: 'Insurance Journal', category: 'general' },
+  { url: 'https://www.insurancejournal.com/newsfeed/', source: 'Insurance Journal Newswire', category: 'general' },
   { url: 'https://www.commercialriskonline.com/feed/', source: 'Commercial Risk', category: 'commercial' },
+  { url: 'https://www.carriermanagement.com/feed/', source: 'Carrier Management', category: 'general' },
+  { url: 'https://www3.ambest.com/ambv/bestwirefeed/', source: 'AM Best', category: 'general' },
+  { url: 'https://news.google.com/rss/search?q=when:7d+allinurl:reuters.com+insurance&ceid=US:en&hl=en-US&gl=US', source: 'Reuters Insurance', category: 'general' },
+  // Podcast
   { url: 'https://feeds.buzzsprout.com/2063104.rss', source: 'The Voice of Insurance', category: 'podcast' },
 ];
 
