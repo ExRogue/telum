@@ -161,27 +161,28 @@ export default function DashboardPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Fetch user
-        const userRes = await fetch('/api/auth/me');
-        const userData = await userRes.json();
-        if (userData.user) setUser(userData.user);
+        // Fetch all data in parallel
+        const [userRes, companyRes, newsRes, contentRes] = await Promise.all([
+          fetch('/api/auth/me'),
+          fetch('/api/companies'),
+          fetch('/api/news?limit=5'),
+          fetch('/api/generate?limit=5'),
+        ]);
 
-        // Fetch company to check if onboarding is needed
-        const companyRes = await fetch('/api/companies');
-        const companyData = await companyRes.json();
+        const [userData, companyData, newsData, contentData] = await Promise.all([
+          userRes.json(),
+          companyRes.json(),
+          newsRes.json(),
+          contentRes.json(),
+        ]);
+
+        if (userData.user) setUser(userData.user);
         if (companyData.company) {
           setCompany(companyData.company);
         } else {
           setShowOnboarding(true);
         }
-
-        // Fetch news and content
-        const newsRes = await fetch('/api/news?limit=5');
-        const newsData = await newsRes.json();
         setNews(newsData.articles || []);
-
-        const contentRes = await fetch('/api/generate?limit=5');
-        const contentData = await contentRes.json();
         setContent(contentData.content || []);
       } catch (err) {
         console.error('Error loading dashboard:', err);

@@ -4,7 +4,7 @@ import { sql } from '@vercel/postgres';
 import { getDb } from './db';
 
 const parser = new Parser({
-  timeout: 10000,
+  timeout: 5000,
   headers: {
     'User-Agent': 'Telum/1.0 Insurance Content Platform',
   },
@@ -38,33 +38,39 @@ export async function fetchNewsFeeds(): Promise<{ fetched: number; errors: strin
   let totalFetched = 0;
   const errors: string[] = [];
 
-  for (const feed of INSURANCE_FEEDS) {
-    try {
+  // Fetch all feeds in parallel for speed
+  const feedResults = await Promise.allSettled(
+    INSURANCE_FEEDS.map(async (feed) => {
       const result = await parser.parseURL(feed.url);
-      const items = result.items.slice(0, 15);
+      return { feed, items: result.items.slice(0, 15) };
+    })
+  );
 
-      for (const item of items) {
-        const id = uuidv4();
-        const tags = extractTags(item.title || '', item.contentSnippet || '');
-        const sourceUrl = item.link || '';
+  for (const feedResult of feedResults) {
+    if (feedResult.status === 'rejected') {
+      errors.push(String(feedResult.reason));
+      continue;
+    }
 
-        // Skip items with no URL — can't dedup without one
-        if (!sourceUrl) continue;
+    const { feed, items } = feedResult.value;
+    for (const item of items) {
+      const id = uuidv4();
+      const tags = extractTags(item.title || '', item.contentSnippet || '');
+      const sourceUrl = item.link || '';
 
-        try {
-          await sql`
-            INSERT INTO news_articles (id, title, summary, content, source, source_url, category, tags, published_at)
-            VALUES (${id}, ${item.title || 'Untitled'}, ${(item.contentSnippet || '').substring(0, 500)}, ${item.content || item.contentSnippet || ''}, ${feed.source}, ${sourceUrl}, ${feed.category}, ${JSON.stringify(tags)}, ${item.isoDate || new Date().toISOString()})
-            ON CONFLICT (source_url) WHERE source_url IS NOT NULL AND source_url != '' AND source_url != '#'
-            DO NOTHING
-          `;
-          totalFetched++;
-        } catch (insertErr) {
-          // Duplicate — skip silently
-        }
+      if (!sourceUrl) continue;
+
+      try {
+        await sql`
+          INSERT INTO news_articles (id, title, summary, content, source, source_url, category, tags, published_at)
+          VALUES (${id}, ${item.title || 'Untitled'}, ${(item.contentSnippet || '').substring(0, 500)}, ${item.content || item.contentSnippet || ''}, ${feed.source}, ${sourceUrl}, ${feed.category}, ${JSON.stringify(tags)}, ${item.isoDate || new Date().toISOString()})
+          ON CONFLICT (source_url) WHERE source_url IS NOT NULL AND source_url != '' AND source_url != '#'
+          DO NOTHING
+        `;
+        totalFetched++;
+      } catch (insertErr) {
+        // Duplicate — skip silently
       }
-    } catch (err) {
-      errors.push(`${feed.source}: ${(err as Error).message}`);
     }
   }
 
@@ -91,16 +97,13 @@ export async function getArticlesByIds(ids: string[]): Promise<NewsArticle[]> {
   if (!ids.length) return [];
   await getDb();
 
-  // sql tagged templates don't support dynamic IN lists directly,
-  // so we fetch one-by-one and combine results
-  const articles: NewsArticle[] = [];
-  for (const id of ids) {
-    const result = await sql`SELECT * FROM news_articles WHERE id = ${id}`;
-    if (result.rows[0]) {
-      articles.push(result.rows[0] as unknown as NewsArticle);
-    }
-  }
-  return articles;
+  // Fetch all IDs in parallel instead of sequentially
+  const results = await Promise.all(
+    ids.map(id => sql`SELECT * FROM news_articles WHERE id = ${id}`)
+  );
+  return results
+    .map(r => r.rows[0])
+    .filter(Boolean) as unknown as NewsArticle[];
 }
 
 export async function searchNews(query: string, limit = 20): Promise<NewsArticle[]> {

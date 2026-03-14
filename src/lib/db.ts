@@ -270,6 +270,14 @@ export async function initDb() {
     )
   `;
 
+  // Migrations: add columns if missing
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false`;
+  await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT ''`;
+  await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#14B8A6'`;
+  await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS secondary_color TEXT DEFAULT '#5EEAD4'`;
+  await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#10B981'`;
+  await sql`ALTER TABLE companies ADD COLUMN IF NOT EXISTS custom_css TEXT DEFAULT ''`;
+
   // Seed data
   await seedDemoArticles();
   await seedPlans();
@@ -280,34 +288,16 @@ export async function initDb() {
 }
 
 let initialized = false;
+let initPromise: Promise<void> | null = null;
 
 export async function getDb() {
   if (!initialized) {
-    await initDb();
-    initialized = true;
+    // Deduplicate concurrent init calls (e.g. parallel API routes on cold start)
+    if (!initPromise) {
+      initPromise = initDb().then(() => { initialized = true; });
+    }
+    await initPromise;
   }
-
-  // Migration: add disabled column if missing
-  await sql`
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN DEFAULT false
-  `;
-
-  // Migration: add branding columns if missing
-  await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT ''
-  `;
-  await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#14B8A6'
-  `;
-  await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS secondary_color TEXT DEFAULT '#5EEAD4'
-  `;
-  await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#10B981'
-  `;
-  await sql`
-    ALTER TABLE companies ADD COLUMN IF NOT EXISTS custom_css TEXT DEFAULT ''
-  `;
 
   return sql;
 }

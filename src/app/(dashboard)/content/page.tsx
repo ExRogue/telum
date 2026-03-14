@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   FileText,
@@ -102,6 +102,18 @@ function formatTime(iso: string): string {
 }
 
 export default function ContentPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full" />
+      </div>
+    }>
+      <ContentPageInner />
+    </Suspense>
+  );
+}
+
+function ContentPageInner() {
   const searchParams = useSearchParams();
   const viewId = searchParams.get('id');
 
