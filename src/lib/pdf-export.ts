@@ -1,4 +1,11 @@
-import { jsPDF } from 'jspdf';
+// Dynamic import to avoid SSR issues — jsPDF accesses browser globals at import time
+let jsPDFModule: typeof import('jspdf') | null = null;
+async function getJsPDF() {
+  if (!jsPDFModule) {
+    jsPDFModule = await import('jspdf');
+  }
+  return jsPDFModule.jsPDF;
+}
 
 interface ExportToPdfOptions {
   title: string;
@@ -26,7 +33,7 @@ const MARGIN_BOTTOM = 25;
 const HEADER_HEIGHT = 18;
 const FOOTER_HEIGHT = 15;
 
-function addHeader(doc: jsPDF, companyName: string) {
+function addHeader(doc: any, companyName: string) {
   doc.setFillColor(NAVY);
   doc.rect(0, 0, PAGE_WIDTH, HEADER_HEIGHT, 'F');
   doc.setFont('helvetica', 'bold');
@@ -39,7 +46,7 @@ function addHeader(doc: jsPDF, companyName: string) {
   doc.text('POWERED BY TELUM', PAGE_WIDTH - MARGIN_RIGHT, 11.5, { align: 'right' });
 }
 
-function addFooter(doc: jsPDF, date: string, pageNum: number, totalPages: number) {
+function addFooter(doc: any, date: string, pageNum: number, totalPages: number) {
   const y = PAGE_HEIGHT - 10;
   doc.setDrawColor(DARK_GRAY);
   doc.setLineWidth(0.3);
@@ -51,7 +58,7 @@ function addFooter(doc: jsPDF, date: string, pageNum: number, totalPages: number
   doc.text(`Page ${pageNum} of ${totalPages}`, PAGE_WIDTH - MARGIN_RIGHT, y, { align: 'right' });
 }
 
-function ensureSpace(doc: jsPDF, currentY: number, needed: number, companyName: string): number {
+function ensureSpace(doc: any, currentY: number, needed: number, companyName: string): number {
   if (currentY + needed > PAGE_HEIGHT - MARGIN_BOTTOM) {
     doc.addPage();
     addHeader(doc, companyName);
@@ -93,7 +100,7 @@ function parseMarkdown(content: string): ParsedLine[] {
   return result;
 }
 
-function renderTextWithBold(doc: jsPDF, text: string, x: number, y: number, maxWidth: number, fontSize: number, baseStyle: string): number {
+function renderTextWithBold(doc: any, text: string, x: number, y: number, maxWidth: number, fontSize: number, baseStyle: string): number {
   // Split text into bold and non-bold segments
   const segments: { text: string; bold: boolean }[] = [];
   const boldRegex = /\*\*(.*?)\*\*/g;
@@ -166,7 +173,8 @@ export async function exportToPdf(options: ExportToPdfOptions): Promise<Blob> {
     year: 'numeric',
   });
 
-  const doc = new jsPDF({
+  const JsPDF = await getJsPDF();
+  const doc = new JsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',

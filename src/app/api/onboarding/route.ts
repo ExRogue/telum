@@ -16,13 +16,17 @@ export async function GET() {
       return NextResponse.json({ dismissed: true, steps: [] });
     }
 
-    // Check each step
+    // Check each step — use individual try/catch so one failing table doesn't break all
+    const safeQuery = async (query: Promise<any>, fallback: any = { rows: [] }) => {
+      try { return await query; } catch { return fallback; }
+    };
+
     const [companyRes, bibleRes, newsRes, contentRes, voiceRes] = await Promise.all([
-      sql`SELECT id FROM companies WHERE user_id = ${user.id} LIMIT 1`,
-      sql`SELECT id FROM messaging_bibles mb JOIN companies c ON mb.company_id = c.id WHERE c.user_id = ${user.id} AND mb.status = 'complete' LIMIT 1`,
-      sql`SELECT COUNT(*)::int as count FROM news_articles LIMIT 1`,
-      sql`SELECT COUNT(*)::int as count FROM generated_content gc JOIN companies c ON gc.company_id = c.id WHERE c.user_id = ${user.id}`,
-      sql`SELECT COUNT(*)::int as count FROM voice_edits WHERE user_id = ${user.id}`,
+      safeQuery(sql`SELECT id FROM companies WHERE user_id = ${user.id} LIMIT 1`),
+      safeQuery(sql`SELECT id FROM messaging_bibles mb JOIN companies c ON mb.company_id = c.id WHERE c.user_id = ${user.id} AND mb.status = 'complete' LIMIT 1`),
+      safeQuery(sql`SELECT COUNT(*)::int as count FROM news_articles LIMIT 1`, { rows: [{ count: 0 }] }),
+      safeQuery(sql`SELECT COUNT(*)::int as count FROM generated_content gc JOIN companies c ON gc.company_id = c.id WHERE c.user_id = ${user.id}`, { rows: [{ count: 0 }] }),
+      safeQuery(sql`SELECT COUNT(*)::int as count FROM voice_edits WHERE user_id = ${user.id}`, { rows: [{ count: 0 }] }),
     ]);
 
     const steps = [
