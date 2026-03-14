@@ -585,7 +585,7 @@ async function seedPlans() {
 
 async function seedDemoNotifications() {
   // Get the demo user ID from the admin seed
-  const userResult = await sql`SELECT id FROM users WHERE email = 'admin@telum.io' LIMIT 1`;
+  const userResult = await sql`SELECT id FROM users WHERE email = 'admin@monitus.ai' LIMIT 1`;
   if (!userResult.rows[0]) return;
 
   const userId = userResult.rows[0].id;
@@ -629,7 +629,7 @@ async function seedDemoNotifications() {
 
 async function seedDemoInvoices() {
   // Get the demo user ID and their subscription
-  const userResult = await sql`SELECT id FROM users WHERE email = 'admin@telum.io' LIMIT 1`;
+  const userResult = await sql`SELECT id FROM users WHERE email = 'admin@monitus.ai' LIMIT 1`;
   if (!userResult.rows[0]) return;
 
   const userId = userResult.rows[0].id;
@@ -694,7 +694,7 @@ async function seedDemoContent() {
   const companyResult = await sql`
     SELECT c.id FROM companies c
     JOIN users u ON c.user_id = u.id
-    WHERE u.email = 'admin@telum.io'
+    WHERE u.email = 'admin@monitus.ai'
     LIMIT 1
   `;
 

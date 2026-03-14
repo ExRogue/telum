@@ -257,7 +257,7 @@ export default function BriefingPage() {
             title={viewingSaved.title}
             subtitle="Intelligence Briefing"
             content={viewingSaved.content}
-            companyName="Telum"
+            companyName="Monitus"
             filename={viewingSaved.title}
           />
         </div>
@@ -652,7 +652,7 @@ export default function BriefingPage() {
                   title={generatedTitle}
                   subtitle={`${FORMATS.find((f) => f.key === format)?.label || 'Briefing'} \u2022 ${selectedIds.size} articles`}
                   content={generatedContent}
-                  companyName="Telum"
+                  companyName="Monitus"
                   filename={generatedTitle}
                 />
                 <Button variant="secondary" size="sm" onClick={resetBuilder}>

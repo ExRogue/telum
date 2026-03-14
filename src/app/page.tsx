@@ -117,7 +117,7 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-lg bg-[var(--accent)] flex items-center justify-center">
               <Zap className="w-4.5 h-4.5 text-white" size={18} />
             </div>
-            <span className="text-lg font-bold text-[var(--text-primary)]">Telum</span>
+            <span className="text-lg font-bold text-[var(--text-primary)]">Monitus</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
             <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">How it works</a>
@@ -163,7 +163,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed">
-            Telum monitors your market, defines your narrative, produces channel-specific content, and learns what&apos;s working &mdash; so insurers, brokers, and MGAs see you consistently saying smart, specific things about their world.
+            Monitus monitors your market, defines your narrative, produces channel-specific content, and learns what&apos;s working &mdash; so insurers, brokers, and MGAs see you consistently saying smart, specific things about their world.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
@@ -405,7 +405,7 @@ export default function LandingPage() {
               {
                 badge: 'Operator',
                 title: 'Junior Marketing Hire',
-                desc: 'You\u2019re approving drafts, scheduling content, and reporting back. Telum gives you the strategic foundation and market intelligence you need to produce work that actually connects to commercial goals.',
+                desc: 'You\u2019re approving drafts, scheduling content, and reporting back. Monitus gives you the strategic foundation and market intelligence you need to produce work that actually connects to commercial goals.',
               },
               {
                 badge: 'The outcome',
@@ -715,10 +715,10 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
               <Zap size={14} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-[var(--text-primary)]">Telum</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">Monitus</span>
           </div>
           <p className="text-xs text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} Telum. Growth intelligence for specialist insurtechs.
+            &copy; {new Date().getFullYear()} Monitus. Growth intelligence for specialist insurtechs.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">

@@ -8,7 +8,7 @@ export const DEFAULTS: Record<string, { value: string; section: string; label: s
   'hero.badge': { value: 'Built for insurance distribution companies', section: 'hero', label: 'Badge text', field_type: 'text' },
   'hero.title': { value: 'Turn insurance news into', section: 'hero', label: 'Headline (before highlight)', field_type: 'text' },
   'hero.title_highlight': { value: 'client-ready content', section: 'hero', label: 'Headline (highlighted part)', field_type: 'text' },
-  'hero.subtitle': { value: 'Telum ingests live trade press, generates branded content across four formats, and checks every word for regulatory compliance — so your team publishes in minutes, not days.', section: 'hero', label: 'Subtitle', field_type: 'textarea' },
+  'hero.subtitle': { value: 'Monitus ingests live trade press, generates branded content across four formats, and checks every word for regulatory compliance — so your team publishes in minutes, not days.', section: 'hero', label: 'Subtitle', field_type: 'textarea' },
   'hero.cta_primary': { value: 'Start free', section: 'hero', label: 'Primary CTA button', field_type: 'text' },
   'hero.cta_secondary': { value: 'See how it works', section: 'hero', label: 'Secondary CTA button', field_type: 'text' },
 
@@ -17,7 +17,7 @@ export const DEFAULTS: Record<string, { value: string; section: string; label: s
 
   // ── Features ──
   'features.title': { value: 'Everything you need to publish with confidence', section: 'features', label: 'Section heading', field_type: 'text' },
-  'features.subtitle': { value: 'From news aggregation to compliance-checked delivery — Telum handles the full content pipeline for insurance distribution.', section: 'features', label: 'Section description', field_type: 'textarea' },
+  'features.subtitle': { value: 'From news aggregation to compliance-checked delivery — Monitus handles the full content pipeline for insurance distribution.', section: 'features', label: 'Section description', field_type: 'textarea' },
   'features.1.title': { value: 'Live News Ingestion', section: 'features', label: 'Feature 1 title', field_type: 'text' },
   'features.1.desc': { value: 'Aggregates from 6 insurance trade press sources in real-time — Insurance Journal, Reinsurance News, Artemis, Insurance Times, The Insurer, and Commercial Risk.', section: 'features', label: 'Feature 1 description', field_type: 'textarea' },
   'features.2.title': { value: 'AI Content Generation', section: 'features', label: 'Feature 2 title', field_type: 'text' },

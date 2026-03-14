@@ -944,7 +944,7 @@ export default function MessagingBiblePage() {
             Welcome to Your Messaging Bible
           </h2>
           <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto mb-8">
-            Your Messaging Bible is the foundation of everything Telum does — from finding relevant news to drafting on-brand content. Let&apos;s set it up so we can start working for you.
+            Your Messaging Bible is the foundation of everything Monitus does — from finding relevant news to drafting on-brand content. Let&apos;s set it up so we can start working for you.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto mb-8">
@@ -1653,7 +1653,7 @@ export default function MessagingBiblePage() {
                                 See It In Action
                               </h3>
                               <p className="text-xs text-[var(--text-secondary)]">
-                                Watch Telum find news and draft content for {companyName} in real time
+                                Watch Monitus find news and draft content for {companyName} in real time
                               </p>
                             </div>
                           </div>
@@ -1800,7 +1800,7 @@ export default function MessagingBiblePage() {
                                     <Sparkles className="w-6 h-6 text-[var(--accent)]" />
                                   </div>
                                   <h4 className="text-lg font-semibold text-[var(--text-primary)]">
-                                    This is what Telum does every day for your company.
+                                    This is what Monitus does every day for your company.
                                   </h4>
                                   <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto">
                                     Monitoring your market, finding relevant developments, and drafting thought

@@ -10,7 +10,7 @@ export default function NotFound() {
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--purple)] flex items-center justify-center">
               <Zap size={18} className="text-white" />
             </div>
-            <span className="text-lg font-bold text-[var(--text-primary)]">Telum</span>
+            <span className="text-lg font-bold text-[var(--text-primary)]">Monitus</span>
           </Link>
         </div>
       </nav>
@@ -46,7 +46,7 @@ export default function NotFound() {
       <footer className="border-t border-[var(--border)] py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-xs text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} Telum. All rights reserved.
+            &copy; {new Date().getFullYear()} Monitus. All rights reserved.
           </p>
         </div>
       </footer>

@@ -6,7 +6,7 @@ import { getDb } from './db';
 const parser = new Parser({
   timeout: 5000,
   headers: {
-    'User-Agent': 'Telum/1.0 Insurance Content Platform',
+    'User-Agent': 'Monitus/1.0 Insurance Content Platform',
   },
 });
 

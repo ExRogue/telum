@@ -3,8 +3,8 @@ import { Zap } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Telum',
-  description: 'How Telum collects, uses, and protects your data.',
+  title: 'Privacy Policy — Monitus',
+  description: 'How Monitus collects, uses, and protects your data.',
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--purple)] flex items-center justify-center">
               <Zap size={18} className="text-white" />
             </div>
-            <span className="text-lg font-bold text-[var(--text-primary)]">Telum</span>
+            <span className="text-lg font-bold text-[var(--text-primary)]">Monitus</span>
           </Link>
           <Link href="/" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             Back to home
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-3">1. Introduction</h2>
             <p>
-              Telum (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy
+              Monitus (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy
               explains how we collect, use, disclose, and safeguard your information when you use our
               AI-powered content generation platform for insurance distribution companies.
             </p>
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
               We do not sell your personal information. We may share your data with trusted service
               providers who assist us in operating the platform (such as cloud hosting and payment
               processing), when required by law or in response to valid legal requests, and to protect
-              the rights, property, or safety of Telum, our users, or the public.
+              the rights, property, or safety of Monitus, our users, or the public.
             </p>
           </section>
 
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
               Depending on your jurisdiction, you may have the right to access your personal data,
               correct inaccurate data, request deletion of your data, object to or restrict processing,
               receive your data in a portable format, and withdraw consent where applicable. To exercise
-              these rights, please contact us at privacy@telum.io.
+              these rights, please contact us at privacy@monitus.ai.
             </p>
           </section>
 
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-3">10. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of any material
-              changes by email or through a notice on our platform. Your continued use of Telum after
+              changes by email or through a notice on our platform. Your continued use of Monitus after
               changes are posted constitutes your acceptance of the updated policy.
             </p>
           </section>
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-3">11. Contact Us</h2>
             <p>
               If you have any questions about this Privacy Policy or our data practices, please contact
-              us at privacy@telum.io.
+              us at privacy@monitus.ai.
             </p>
           </section>
         </div>
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
       <footer className="border-t border-[var(--border)] py-8">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-xs text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} Telum. All rights reserved.
+            &copy; {new Date().getFullYear()} Monitus. All rights reserved.
           </p>
         </div>
       </footer>

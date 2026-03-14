@@ -43,7 +43,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for auth token
-  const token = request.cookies.get('telum_token')?.value;
+  const token = request.cookies.get('monitus_token')?.value;
   if (!token) {
     // API routes return 401, pages redirect to login
     if (pathname.startsWith('/api/')) {

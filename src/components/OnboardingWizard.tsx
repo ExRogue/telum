@@ -19,7 +19,7 @@ interface Props {
 const steps: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Telum',
+    title: 'Welcome to Monitus',
     description: 'AI-powered content generation for regulated industries',
     icon: <CheckCircle className="w-12 h-12 text-[var(--accent)]" />,
   },
@@ -141,7 +141,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: Props) {
           {step.id === 'welcome' && (
             <div className="space-y-4">
               <p className="text-[var(--text-secondary)] text-sm">
-                Telum helps regulated industries generate compliant content at scale. Let's get you started in just a few minutes.
+                Monitus helps regulated industries generate compliant content at scale. Let's get you started in just a few minutes.
               </p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
@@ -233,7 +233,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: Props) {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-semibold text-[var(--text-primary)]">3.</span>
-                  <span>Click Generate and watch Telum create compliant content in seconds</span>
+                  <span>Click Generate and watch Monitus create compliant content in seconds</span>
                 </li>
               </ol>
             </div>

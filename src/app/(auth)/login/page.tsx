@@ -44,7 +44,7 @@ export default function LoginPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
-        <span className="text-xl font-bold text-[var(--text-primary)]">Telum</span>
+        <span className="text-xl font-bold text-[var(--text-primary)]">Monitus</span>
       </div>
 
       <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Welcome back</h2>

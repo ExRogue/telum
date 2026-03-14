@@ -8,20 +8,20 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Telum — AI Content Engine for Insurance Distribution',
-  description: 'Transform insurance news into branded, compliance-checked content. Built for MGAs, Insurtechs, and Brokers.',
-  keywords: ['insurance', 'content generation', 'MGA', 'insurtech', 'broker', 'compliance', 'AI', 'newsletter', 'insurance distribution'],
-  authors: [{ name: 'Telum' }],
+  title: 'Monitus — Growth Intelligence for Specialist Insurtechs',
+  description: 'Monitus monitors your market, defines your narrative, produces channel-specific content, and learns what works — so insurers, brokers, and MGAs see you consistently saying smart things about their world.',
+  keywords: ['insurtech', 'growth intelligence', 'insurance marketing', 'MGA', 'broker', 'content platform', 'AI', 'messaging bible', 'insurance distribution'],
+  authors: [{ name: 'Monitus' }],
   openGraph: {
     type: 'website',
-    title: 'Telum — AI Content Engine for Insurance Distribution',
-    description: 'Transform insurance news into branded, compliance-checked content. Built for MGAs, Insurtechs, and Brokers.',
-    siteName: 'Telum',
+    title: 'Monitus — Growth Intelligence for Specialist Insurtechs',
+    description: 'Monitus monitors your market, defines your narrative, produces channel-specific content, and learns what works.',
+    siteName: 'Monitus',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Telum — AI Content Engine for Insurance Distribution',
-    description: 'Transform insurance news into branded, compliance-checked content.',
+    title: 'Monitus — Growth Intelligence for Specialist Insurtechs',
+    description: 'Growth intelligence for specialist insurtechs. Define, monitor, draft, distribute, learn.',
   },
   icons: {
     icon: '/favicon.svg',

@@ -720,7 +720,7 @@ export default function BillingPage() {
             If you need help choosing a plan or have billing questions, contact our support team.
           </p>
           <a
-            href="mailto:support@telum.io"
+            href="mailto:support@monitus.ai"
             className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg text-sm sm:text-base font-medium transition-colors"
           >
             <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

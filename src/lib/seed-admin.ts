@@ -4,8 +4,8 @@ import { sql } from '@vercel/postgres';
 
 const bcryptHash = (bcrypt as any).default?.hash || bcrypt.hash;
 
-const ADMIN_EMAIL = 'admin@telum.io';
-const ADMIN_NAME = 'Telum Admin';
+const ADMIN_EMAIL = 'admin@monitus.ai';
+const ADMIN_NAME = 'Monitus Admin';
 
 // Called from initDb() — do NOT call getDb() here to avoid recursive initialization
 export async function seedAdmin() {

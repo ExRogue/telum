@@ -92,7 +92,7 @@ export default function OnboardingChecklist() {
         </div>
         <div>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-            Get started with Telum
+            Get started with Monitus
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
             {completedCount} of {totalSteps} complete

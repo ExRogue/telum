@@ -13,7 +13,7 @@ function getSecret(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET must be set in production');
     }
-    return 'telum-dev-secret-local-only';
+    return 'monitus-dev-secret-local-only';
   }
   return secret;
 }
@@ -89,7 +89,7 @@ export function verifyToken(token: string): { userId: string; email: string } | 
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('telum_token')?.value;
+    const token = cookieStore.get('monitus_token')?.value;
     if (!token) return null;
 
     const payload = verifyToken(token);

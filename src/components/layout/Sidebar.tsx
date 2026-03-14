@@ -95,7 +95,7 @@ export default function Sidebar({ open = true, onClose }: { open?: boolean; onCl
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-                Telum
+                Monitus
               </span>
             </div>
             <button
@@ -158,7 +158,7 @@ export default function Sidebar({ open = true, onClose }: { open?: boolean; onCl
           </div>
           {!collapsed && (
             <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-              Telum
+              Monitus
             </span>
           )}
         </div>

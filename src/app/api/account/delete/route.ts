@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     await sql`DELETE FROM companies WHERE user_id = ${user.id}`;
 
     // Anonymise user record (retain for audit trail)
-    const anonymisedEmail = `deleted-${user.id.slice(0, 8)}@deleted.telum.io`;
+    const anonymisedEmail = `deleted-${user.id.slice(0, 8)}@deleted.monitus.ai`;
     await sql`
       UPDATE users SET
         email = ${anonymisedEmail},
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Clear auth cookie
     const response = NextResponse.json({ message: 'Account deleted successfully' });
-    response.cookies.set('telum_token', '', { maxAge: 0, path: '/' });
+    response.cookies.set('monitus_token', '', { maxAge: 0, path: '/' });
 
     return response;
   } catch (error) {

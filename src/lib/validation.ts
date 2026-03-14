@@ -1,5 +1,5 @@
 /**
- * Input validation utilities for Telum API routes
+ * Input validation utilities for Monitus API routes
  */
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

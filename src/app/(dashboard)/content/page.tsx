@@ -399,7 +399,7 @@ function ContentPageInner() {
                 title={selectedItem.title}
                 subtitle={meta.label}
                 content={selectedItem.content}
-                companyName="Telum"
+                companyName="Monitus"
                 filename={selectedItem.title}
                 className="flex-1 sm:flex-none"
               />

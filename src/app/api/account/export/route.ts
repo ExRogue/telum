@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="telum-data-export-${user.id.slice(0, 8)}.json"`,
+      'Content-Disposition': `attachment; filename="monitus-data-export-${user.id.slice(0, 8)}.json"`,
     },
   });
 }

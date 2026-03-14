@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-[var(--text-primary)]">Telum</span>
+            <span className="text-2xl font-bold text-[var(--text-primary)]">Monitus</span>
           </div>
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
             Build market credibility without a marketing team
