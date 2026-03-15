@@ -18,6 +18,7 @@ const PUBLIC_PATHS = [
   '/api/waitlist',
   '/api/webhooks/stripe',
   '/api/content',
+  '/api/cron',
   '/api/health',
   '/api/v1',
   '/sitemap.xml',
