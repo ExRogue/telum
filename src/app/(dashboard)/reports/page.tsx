@@ -108,7 +108,7 @@ export default function ReportsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Reports</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            AI-generated intelligence reports and positioning reviews
+            Generate monthly and quarterly reports to share with your team.
           </p>
         </div>
         <div className="flex items-center gap-2">

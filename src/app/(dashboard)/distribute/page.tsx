@@ -211,7 +211,7 @@ export default function DistributePage() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">Distribute</h1>
         <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-          Manage and track your content distribution across channels
+          Schedule, publish, and track your content across LinkedIn, email, and trade media.
         </p>
       </div>
 

@@ -33,6 +33,7 @@ import {
   KeyRound,
   Lightbulb,
   RefreshCw,
+  Globe,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import SimpleMarkdown from '@/components/SimpleMarkdown';
@@ -120,10 +121,12 @@ function InterviewChat({
   onComplete,
   existingBible,
   selectedArchetypeId,
+  websiteContext,
 }: {
   onComplete: (extractedData: any) => void;
   existingBible: any;
   selectedArchetypeId: string | null;
+  websiteContext?: string | null;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -202,6 +205,7 @@ function InterviewChat({
           message: trimmed,
           sessionId,
           phase,
+          ...((!sessionId && websiteContext) ? { websiteContext } : {}),
         }),
       });
 
@@ -578,6 +582,36 @@ export default function MessagingBiblePage() {
   const [uploadProcessing, setUploadProcessing] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
 
+  // Website scanner
+  const [scanUrl, setScanUrl] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ url: string; extractedText: string; pagesScanned: number } | null>(null);
+  const [scanError, setScanError] = useState('');
+
+  const handleScanWebsite = async () => {
+    if (!scanUrl.trim() || scanning) return;
+    setScanning(true);
+    setScanError('');
+    setScanResult(null);
+    try {
+      const res = await fetch('/api/messaging-bible/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: scanUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setScanError(data.error || 'Failed to scan website');
+        return;
+      }
+      setScanResult(data);
+    } catch {
+      setScanError('Failed to scan website. Please try again.');
+    } finally {
+      setScanning(false);
+    }
+  };
+
   // Step 1: Company
   const [companyName, setCompanyName] = useState('');
   const [companyType, setCompanyType] = useState('');
@@ -775,7 +809,7 @@ export default function MessagingBiblePage() {
       const genRes = await fetch('/api/messaging-bible/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bibleId: saveData.bibleId }),
+        body: JSON.stringify({ bibleId: saveData.bibleId, websiteContext: scanResult?.extractedText || undefined }),
       });
       const genData = await genRes.json();
       if (!genRes.ok) {
@@ -841,10 +875,10 @@ export default function MessagingBiblePage() {
         <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-6 sm:p-8">
           <div className="text-center mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mb-2">
-              Choose Your Voice Archetype
+              How should your brand sound?
             </h2>
             <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto">
-              Select the voice that best represents how you want your brand to sound. This will pre-fill your voice preferences and guide the interview.
+              Pick a starting point — we'll fine-tune it during the interview.
             </p>
           </div>
 
@@ -972,6 +1006,64 @@ export default function MessagingBiblePage() {
           <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto mb-8">
             Your Narrative is the foundation of everything Monitus does — from finding relevant news to drafting on-brand content. Let&apos;s set it up so we can start working for you.
           </p>
+
+          {/* Website scanner */}
+          <div className="max-w-xl mx-auto mb-6 bg-[var(--navy)] border border-[var(--border)] rounded-xl p-5 text-left">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Scan your website</h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  We&apos;ll extract key information to pre-fill your Narrative
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="yourcompany.com"
+                value={scanUrl}
+                onChange={(e) => setScanUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleScanWebsite(); }}
+                className={inputClass}
+              />
+              <button
+                onClick={handleScanWebsite}
+                disabled={scanning || !scanUrl.trim()}
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {scanning ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Scanning...</>
+                ) : (
+                  <><Globe className="w-4 h-4" /> Scan</>
+                )}
+              </button>
+            </div>
+            {scanError && (
+              <p className="mt-2 text-xs text-red-400">{scanError}</p>
+            )}
+            {scanResult && (
+              <div className="mt-3 bg-[var(--navy-light)] border border-[var(--border)] rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    Scanned {scanResult.pagesScanned} page{scanResult.pagesScanned !== 1 ? 's' : ''} from {scanResult.url}
+                  </span>
+                  <button
+                    onClick={() => { setScanResult(null); setScanUrl(''); }}
+                    className="text-[var(--text-secondary)] hover:text-red-400 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] line-clamp-3 leading-relaxed">
+                  {scanResult.extractedText.substring(0, 300)}...
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Document upload option */}
           <div
@@ -1167,7 +1259,7 @@ export default function MessagingBiblePage() {
 
       {/* Interview Mode */}
       {mode === 'interview' && !generatedDoc && (
-        <InterviewChat onComplete={handleInterviewComplete} existingBible={existingBible} selectedArchetypeId={selectedArchetype} />
+        <InterviewChat onComplete={handleInterviewComplete} existingBible={existingBible} selectedArchetypeId={selectedArchetype} websiteContext={scanResult?.extractedText || null} />
       )}
 
       {/* Form Mode */}

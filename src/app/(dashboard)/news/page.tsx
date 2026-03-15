@@ -174,6 +174,7 @@ export default function NewsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshResult, setRefreshResult] = useState<{ fetched: number; errors: string[] } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,11 +195,17 @@ export default function NewsPage() {
   const [drySpellLoading, setDrySpellLoading] = useState(false);
   const [isDrySpell, setIsDrySpell] = useState(false);
 
+  // Debounce search input so we don't refetch on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   const fetchArticles = useCallback(async () => {
     setError('');
     const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
-    if (activeCategory !== 'all' && !searchQuery) params.set('category', activeCategory);
+    if (debouncedSearch) params.set('q', debouncedSearch);
+    if (activeCategory !== 'all' && !debouncedSearch) params.set('category', activeCategory);
     if (timeFilter !== 'all') params.set('timeframe', timeFilter);
     params.set('limit', '50');
 
@@ -214,7 +221,7 @@ export default function NewsPage() {
       return;
     }
     setArticles(data.articles || []);
-  }, [searchQuery, activeCategory, timeFilter]);
+  }, [debouncedSearch, activeCategory, timeFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -443,7 +450,7 @@ export default function NewsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">News Feed</h1>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Insurance industry news from leading trade press
+            Browse industry news, save articles, and turn them into content.
           </p>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-2">

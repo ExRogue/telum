@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { bibleId } = await request.json();
+    const { bibleId, websiteContext } = await request.json();
     if (!bibleId) return NextResponse.json({ error: 'Bible ID required' }, { status: 400 });
 
     await getDb();
@@ -100,7 +100,7 @@ ${keyChallenges.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n') || 'N
 ${departments.map((d: any) => `- ${d.name} (${d.focus || 'strategic'} focus)`).join('\n') || 'Not specified'}
 
 **Priority Channels:** ${channels.join(', ') || 'LinkedIn, Email, Trade Media'}
-
+${websiteContext ? `\n**Additional Context (from company website scan):**\n${String(websiteContext).substring(0, 6000)}\n` : ''}
 Generate the complete Narrative now. Make it specific to ${company.name} — reference their actual niche, competitors, and differentiators throughout. Do not be generic.`;
 
     let fullDocument: string;

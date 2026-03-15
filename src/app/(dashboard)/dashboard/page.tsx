@@ -294,7 +294,7 @@ export default function DashboardPage() {
           {user ? `Welcome back, ${user.name.split(' ')[0]}` : 'Dashboard'}
         </h1>
         <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-          Your insurance content command centre
+          Monitor your content performance and track what matters.
         </p>
       </div>
 

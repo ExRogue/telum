@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { message, sessionId, phase } = body;
+    const { message, sessionId, phase, websiteContext } = body;
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -175,6 +175,18 @@ export async function POST(request: NextRequest) {
 
     // If transitioning to voice phase, prepend context from positioning
     let claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+
+    // If website context was provided (first message of new session), prepend it
+    if (websiteContext && typeof websiteContext === 'string' && messages.length <= 1) {
+      claudeMessages.push({
+        role: 'user',
+        content: `[Website Content - extracted from the company's website for additional context. Use this to inform your questions and avoid asking about things already covered here]:\n\n${websiteContext.substring(0, 8000)}`,
+      });
+      claudeMessages.push({
+        role: 'assistant',
+        content: "Thanks, I've reviewed the website content. I'll use this as background context for our conversation. Let me ask some deeper questions to build on what I can see.",
+      });
+    }
 
     if (currentPhase === 'voice') {
       // Include a condensed summary of positioning phase as context

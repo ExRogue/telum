@@ -154,6 +154,7 @@ export default function PipelinePage() {
   const [articleRelevance, setArticleRelevance] = useState<Record<string, RelevanceLevel>>({});
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [relevanceFilter, setRelevanceFilter] = useState<RelevanceLevel | 'all'>('all');
   const [loading, setLoading] = useState(true);
@@ -193,6 +194,12 @@ export default function PipelinePage() {
 
   const atContentLimit = usage !== null && usage.content_pieces_limit !== null && usage.content_pieces_used >= usage.content_pieces_limit;
 
+  // Debounce search input so we don't refetch on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(t);
+  }, [search]);
+
   /* ── Fetch articles ── */
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -200,7 +207,7 @@ export default function PipelinePage() {
     try {
       const params = new URLSearchParams();
       if (category !== 'all') params.set('category', category);
-      if (search) params.set('q', search);
+      if (debouncedSearch) params.set('q', debouncedSearch);
       params.set('limit', '30');
       const res = await fetch(`/api/news?${params}`);
       const data = await res.json();
@@ -224,7 +231,7 @@ export default function PipelinePage() {
     } finally {
       setLoading(false);
     }
-  }, [category, search]);
+  }, [category, debouncedSearch]);
 
   useEffect(() => {
     fetchArticles();
@@ -1031,26 +1038,19 @@ export default function PipelinePage() {
       }
     };
 
-    const complianceChecklist = (notes: string) => {
+    const getComplianceNotes = (notes: string): string[] => {
       try {
         const parsed = JSON.parse(notes);
-        const items = parsed.checks || [];
-        if (items.length === 0) {
-          return [
-            { label: 'Brand voice alignment', passed: parsed.score >= 70 },
-            { label: 'Messaging bible compliance', passed: parsed.score >= 60 },
-            { label: 'Tone consistency', passed: parsed.score >= 50 },
-            { label: 'Factual accuracy', passed: true },
-          ];
+        if (Array.isArray(parsed.notes)) return parsed.notes;
+        if (Array.isArray(parsed.checks)) {
+          return parsed.checks
+            .filter((c: { passed?: boolean }) => !c.passed)
+            .map((c: { label?: string }) => c.label || 'Unknown issue');
         }
-        return items;
+        if (typeof parsed.summary === 'string') return [parsed.summary];
+        return [];
       } catch {
-        return [
-          { label: 'Brand voice alignment', passed: true },
-          { label: 'Messaging bible compliance', passed: true },
-          { label: 'Tone consistency', passed: true },
-          { label: 'Factual accuracy', passed: true },
-        ];
+        return [];
       }
     };
 
@@ -1122,34 +1122,28 @@ export default function PipelinePage() {
                 </div>
               </div>
 
-              {/* Content Analysis */}
-              <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-[var(--accent)]" />
-                    <span className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">Content Analysis</span>
-                  </div>
-                  <Badge
-                    variant={activeItem.compliance_status === 'passed' ? 'success' : 'warning'}
-                    size="sm"
-                  >
-                    {getComplianceScore(activeItem.compliance_notes)}%
-                  </Badge>
+              {/* Compliance Check */}
+              <div className="bg-[var(--navy-light)] border border-[var(--border)] rounded-xl px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  {activeItem.compliance_status === 'passed' ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
+                      <span className="text-xs font-medium text-[var(--text-primary)]">Compliance: Passed ({getComplianceScore(activeItem.compliance_notes)}%)</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5 text-[var(--warning)] flex-shrink-0" />
+                      <span className="text-xs font-medium text-[var(--warning)]">Compliance: Flagged — review notes below</span>
+                    </>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  {complianceChecklist(activeItem.compliance_notes).map((check: { label: string; passed: boolean }, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      {check.passed ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
-                      ) : (
-                        <AlertTriangle className="w-3.5 h-3.5 text-[var(--warning)] flex-shrink-0" />
-                      )}
-                      <span className={`text-xs ${check.passed ? 'text-[var(--text-secondary)]' : 'text-[var(--warning)]'}`}>
-                        {check.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {activeItem.compliance_status !== 'passed' && getComplianceNotes(activeItem.compliance_notes).length > 0 && (
+                  <ul className="mt-2 space-y-1 pl-6">
+                    {getComplianceNotes(activeItem.compliance_notes).map((note: string, idx: number) => (
+                      <li key={idx} className="text-xs text-[var(--warning)] list-disc">{note}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Actions */}
@@ -1290,7 +1284,7 @@ export default function PipelinePage() {
           <span className="truncate">Content Pipeline</span>
         </h1>
         <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1.5 sm:mt-2">
-          Select a news article, choose your format, and generate branded content in minutes
+          Select articles, choose a format, and generate branded content in seconds.
         </p>
       </div>
 
